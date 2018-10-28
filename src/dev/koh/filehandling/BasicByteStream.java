@@ -1,9 +1,6 @@
 package dev.koh.filehandling;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Scanner;
 
 public class BasicByteStream {
@@ -15,6 +12,9 @@ public class BasicByteStream {
     private String filePath = null;
     private String fileName = null;
     private String fileExt = null;
+    private String fileData = null;
+    private boolean appendFlag;
+
 
     public static void main(String[] args) throws FileNotFoundException {
 
@@ -30,107 +30,243 @@ public class BasicByteStream {
     }
 
     private void menu() throws FileNotFoundException {
-
+//        Time Stamp: 28th October 2K18, 04:37 PM!
         int ch;
-
         do {
             System.out.println("1. Create New File.");
+//            System.out.println("2. Read Existing File.");
             System.out.println("0. Exit!");
             System.out.print("Enter Choice: ?: ");
 
             ch = scanner.nextInt();
             scanner.nextLine(); //  Empty Buffer.
             switch (ch) {
+
+                //  Exit the Program!
                 case 0:
                     System.out.println("Shutting Down the program.");
                     break;
+
+                //  Create New File!
                 case 1:
-                    createFile();
+                    obtainFileDetails();
+                    createNewFile();
                     break;
 
                 default:
                     System.out.println("Please Enter Valid Choice!");
             }
         } while (ch != 0);
+//        Time Stamp: 28th October 2K18, 05:01 PM!
 
     }
 
-    private void createFile() throws FileNotFoundException {
+    private void obtainFileDetails() {
+
+        fileName = obtainFileName();
+        fileExt = obtainFileExt();
+        filePath = obtainFilePath();
+
+        //  Check if file already exists & Prompt User for append or overwrite!
+        appendFlag = wannaAppend();
+
+        fileData = obtainFileData();
+
+        //  Validations required!
+
+    }
+
+    private String obtainFileName() {
+        System.out.print("Enter File Name: ");
+        return scanner.nextLine();
+    }
+
+    private String obtainFileExt() {
+        System.out.print("Enter File Extention: ");
+        return scanner.nextLine();
+    }
+
+    private String obtainFilePath() {
 
         String fPath = null;
-        String fName = null;
-        String fExt = null;
-
-        System.out.print("Enter File Name: ");
-        fName = scanner.nextLine();
-        System.out.print("Enter File Extention: ");
-        fExt = scanner.nextLine();
-
         int ch = 0;
         do {
             System.out.println("Choose File Path:\n1. Default: " + ABSOLUTE_FILE_PATH);
             System.out.println("2. Enter Path Manually. ");
 
+            //  ch -> user's input.
             ch = scanner.nextInt();
+
+            //  clear the return or space character from the buffer.
             scanner.nextLine();
+
             switch (ch){
+
+                //  Default Path.
                 case 1:
                     fPath = ABSOLUTE_FILE_PATH;
                     break;
+
+                //  Manually Input Complete Path.
                 case 2:
                     System.out.println("Enter New File Path: ");
-                    fPath = scanner.nextLine();
-                    //  checking required.
+                    fPath = scanner.nextLine(); //  Accept entire path for the new file.
+                    //  Validation required.
                     break;
+
                 default:
                     System.out.println("Invalid Choice! Please Try Again...");
             }
 
-        } while (ch != 1 && ch != 2);
+        } while (ch != 1 && ch != 2);   //  Prompt user for input until user opts for a valid choice i.e. 1 or 2.
+        return fPath;   //  return the selected new file path.
+    }
 
-        filePath = fPath;
-        fileName = fName;
-        fileExt = fExt;
+    private boolean wannaAppend() {
+        boolean temp = true;
+        int rnCount;
+        int ch = 0;
+        //  Check if the file already exists at the path specified.
+        boolean fExists = (new File(filePath + fileName + fileExt).exists());
+        if (fExists)
+            System.out.println("There is already a file with the same name in this location!");
 
-        createNewFile();
+        // increment the counter of new file name according to the last version of the existing file name.
+        //  Example: a.txt | a (2).txt | a (3).txt |
+        //  there exists these 3 files already, if one decides to keep both the files i.e. new
+        //  and the old then findout how many files with the count exists & store the value of the
+        //  next consecutive value for the new file name in rnCount.
+        rnCount = gatherRenameCounter();
 
+        while ( fExists && (ch < 1 || ch > 3) ) {
+            //  Prompt User with choice to Append the file contents to the existing file.
+            //  y => appendFlag = true | n =< overwrite i.e. appendFlag = false.
+            System.out.println("1. Append the content in the file with an additional new line.");
+            System.out.println("2. Overwrite the file with the new content.");
+            System.out.println("3. Keep Both Files, Renaming the new file as " + fileName + " (" +
+                    rnCount + ")" + fileExt);
+//            System.out.println("4. Go Back!");
+            ch = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (ch) {
+                case 1:
+                    //  For Appending, set temp = true.
+                    temp = true;
+                    break;
+                case 2:
+                    //  For Overwriting, set temp = false.
+                    temp = false;
+                    break;
+                case 3:
+                    //  To Keep both the files, rename the new file with count value of 1 more than
+                    //  the last version of the existing file.
+                    fileName += " (" + rnCount + ")";
+                    temp = false;
+                    break;
+                default:
+                    System.out.println("Invalid Choice!\nPlease Try Again...\n");
+            }
+        }
+        return temp;
+    }
+
+    private int gatherRenameCounter() {
+        //  Initially, the file already exists, so the rename count has to start with 1.
+        int tempCount = 1;
+
+        // Requirement:
+        // check if file name already consists the (1), then increment the count within the name itself.
+
+        for(int i = 1; i < 10; i++){
+
+            //  check if the file with next count (within the parenthesis) also already exists.
+            if( new File(filePath + fileName + " (" + i + ")" + fileExt).exists() ) {
+
+                //  increase the counter if the file with next count value already exists.
+                tempCount++;
+
+                //  if the value of i goes above 8, either there are too many copies of the file,
+                //  or there is a bug in code. Hence, requires manual check for confirmation!
+                if (i > 8) {
+                    System.out.println("Too Many Duplicate Files!!!");
+                    System.out.println("Check it quick!");
+                }
+            }
+        }
+        return tempCount;
+    }
+
+    private String obtainFileData() {
+        //  local variable for storing the file content i.e. String.
+        String fData = "";
+
+        //  temporary variable for storing user's choice for entering more data i.e.
+        //  either 'y' or 'n'.
+        int ch = 0;
+        do{
+            System.out.println("Enter File Content:");
+
+            //  Append the entire Line of content entered by user to fData.
+            fData += scanner.nextLine();
+
+            //  Prompt user for choice of entering more content in form of: (y/n)
+            System.out.print("-----------------\nWant to Enter more content? (y/n) : ");
+
+            //  Consider only the first character of the user's input word for the choice.
+            ch = scanner.next().charAt(0);
+            scanner.nextLine();
+
+            switch (ch){
+                case 'y':
+                case 'Y':
+                    //  Continue the do while loop & Prompt the user for entering another line content.
+                    continue;
+                case 'n':
+                case 'N':
+                    System.out.println("----------------------");
+                    System.out.println("Content to be written in File:");
+                    System.out.println(fData);
+                    break;
+                default:
+                    System.out.println("Invalid Choice!\nPlease Try Again...");
+            }
+
+        } while (ch != 'n');    //  exit the loop only when user opts to stop entering the content for file.
+        return fData;   //  return the local variable which contains the entire content of the file.
     }
 
     private void createNewFile() throws FileNotFoundException {
 //        Time Stamp: 22nd October 2K18, 4:17 PM!
+//        Time Stamp: 28th October 2K18, 08:16 PM!
 
         //  fPath must always consist of '/' directory delimiter
         //  & character at its last index must be '/'.
-        OutputStream fos = new FileOutputStream(filePath + fileName + fileExt, false);
+        OutputStream fos = new FileOutputStream(filePath + fileName + fileExt, appendFlag);
 
-        String content = null;
-        content = "Java IO streams are flows of data you can either read from, or write to. As mentioned earlier in this tutorial, streams are typically connected to a data source, or data destination, like a file, network connection etc.\n" +
-                "\n" +
-                "A stream has no concept of an index of the read or written data, like an array does. Nor can you typically move forth and back in a stream, like you can in an array, or in a file using RandomAccessFile. A stream is just a continuous flow of data.\n" +
-                "\n" +
-                "Some stream implementations like the PushbackInputStream allows you to push data back into the stream, to be re-read again later. But you can only push back a limited amount of data, and you cannot traverse the data at will, like you can with an array. Data can only be accessed sequentially.\n" +
-                "\n" +
-                "Java IO streams are typically either byte based or character based. The streams that are byte based are typically called something with \"stream\", like InputStream or OutputStream. These streams read and write a raw byte at a time, with the exception of the DataInputStream and DataOutputStream which can also read and write int, long, float and double values.\n" +
-                "\n" +
-                "The streams that are character based are typically called something with \"Reader\" or \"Writer\". The character based streams can read / write characters (like Latin1 or UNICODE characters). See the text Java Readers and Writers for more information about character based input and output.";
-        String str = "Hello World!";
         try {
 
-            fos.write(str.getBytes());
+            fos.write(fileData.getBytes());
 
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
                 try {
-                    fos.close();
-                    System.out.println("File |" + fileName + "| successfully created in the following directory");
-                    System.out.println(filePath);
+                    if(fos != null) {
+                        fos.close();
+                        displaySuccessMsg();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
         }
 
 //        Time Stamp: 22nd October 2K18, 4:53 PM!
+    }
+
+    private void displaySuccessMsg() {
+        System.out.println("File |" + fileName + "| successfully created in the following directory");
+        System.out.println(filePath);
     }
 
     private String replaceBackSlash(String tempFilePath){
@@ -158,7 +294,7 @@ public class BasicByteStream {
 
 /*
  * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 22nd October 2K18, 03:52 PM!
+ * Date Modified: 28th October 2K18, 10:18 PM!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
