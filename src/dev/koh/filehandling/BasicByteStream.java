@@ -25,7 +25,7 @@ public class BasicByteStream {
         obj.menu();
 
         System.out.println("End.");
-//        Time Stamp: 22nd October 2K18, 3:52 PM!
+//  Time Stamp: 30th October 2K18, 01:53 PM!
 
     }
 
@@ -45,11 +45,21 @@ public class BasicByteStream {
                 //  Exit the Program!
                 case 0:
                     System.out.println("Shutting Down the program.");
+                    if(scanner != null){
+                        scanner.close();
+                    }
                     break;
 
                 //  Create New File!
                 case 1:
+                    /*
+                     * Obtain File Details from the User including: New File Name, Extension, Path,
+                     * if file already Exists then Prompt User for
+                     * Write Mode i.e. Append, Overwrite, Keep Both Files by renaming the new file accordingly.
+                     */
                     obtainFileDetails();
+
+                    //  Using the file details obtained, create new file accordingly.
                     createNewFile();
                     break;
 
@@ -82,8 +92,153 @@ public class BasicByteStream {
     }
 
     private String obtainFileExt() {
-        System.out.print("Enter File Extention: ");
-        return scanner.nextLine();
+        //  Time Stamp: 30th October 2K18, 11:04 AM!
+        String fExt = "";
+        char[] temp = null;
+        boolean invalidFileExtension = false;
+        boolean unnecessaryWhiteSpace = false;
+
+        outerLoop: //  label : "do while" loop!
+        do {
+            invalidFileExtension = false;
+            System.out.println("---------------------");
+            System.out.print("Enter File Extention (Only ALPHA-Numeric Charset. without any period) : ");
+            fExt = scanner.nextLine();
+
+            //  Check if fExt is Empty.
+            if(fExt.isEmpty()){
+                System.out.println("File Extension can't be EMPTY!\nPlease try again...");
+                invalidFileExtension = true;
+                continue;
+            }
+
+            //  Check if fExt is only White Space.
+            if(fExt.isBlank()){
+                System.out.println("File Extension Contains only White Spaces!\nPlease try again...");
+                invalidFileExtension = true;
+                continue;
+            }
+
+            if(fExt.length() > 250){
+                System.out.println("File Extension Length Limit Exceeded (250 Characters)\nPlease try again...");
+                invalidFileExtension = true;
+                continue;
+            }
+
+            //  Validate for any special characters.
+            if( consistsSpecialCharacter(fExt) ){
+                invalidFileExtension = true;
+                System.out.println("Please Try Again...");
+                continue;
+            }
+
+            //  Check if there's any white space character in between of the file extension.
+            temp = fExt.trim().toCharArray();
+            for (int i = 0; i < temp.length; i++) {
+                char c = temp[i];
+                if (Character.isWhitespace(c)) {
+                    System.out.println("Please do not enter any white space character in the file extension." +
+                            " (Unicode: " + Character.codePointAt(temp, i) + " | Character: '" + temp[i] + "')");
+
+                    //  needs this method for the above statement!
+                    //  String appendZeroes(int codePoint, int numLength);
+
+                    invalidFileExtension = true;
+                    continue outerLoop;
+                }
+            }
+
+            //  Raise Warning to user if there's any unnecessary white space characters at the
+            //  beginning or at the end of the File Extension.
+            if(fExt.charAt(0) == ' ' || fExt.charAt(fExt.length() -1) == ' '){
+                System.out.println("Warning:\nAdditional Spaces found at: ");
+                unnecessaryWhiteSpace = true;
+                invalidFileExtension = false;
+            }
+            if(fExt.charAt(0) == ' ') {
+                System.out.print("Beginning, ");
+            }
+            if (fExt.charAt(fExt.length() -1) == ' ') {
+                System.out.println("End, ");
+            }
+
+            //  Trim any unnecessary white space characters from the beginning and the end of the File Extension.
+            if(unnecessaryWhiteSpace){
+                System.out.println("Removing Unnecessary White Spaces from the File Extension: " +
+                        "\"" + fExt + "\"" );
+                System.out.println( "File Extension Trimmed to: \"" + fExt.trim() + "\"" );
+            }
+
+        } while (invalidFileExtension);
+
+        return fExt.trim(); //  return the valid file extension.
+        //  Time Stamp: 30th October 2K18, 01:53 PM!
+    }
+
+    private boolean consistsSpecialCharacter(String fExt) {
+        //  Time Stamp: 30th October 2K18, 11:04 AM!
+
+        boolean temp = false;
+        int countSpecialCharacters;
+        countSpecialCharacters = 1;
+
+        System.out.println("Do not enter any of the following special characters: ");
+        //  Hebrew Punctuation Paseq (U+05C0) Big Vertical Line used as separator between Unicode & Character!
+
+        //  Required!
+        //  Display in the following format, but remove this line if no special char. found!
+        //  Sr. No.  |  Unicode  |  Character Symbol  |
+
+        if(fExt.contains(".")){
+            System.out.print("[" + countSpecialCharacters + "] " );
+            System.out.println("Periods or Dots! (.)");
+            countSpecialCharacters++;
+            temp = true;
+        }
+        if(fExt.contains("/")){
+            System.out.print("[" + countSpecialCharacters + "] ");
+            System.out.println(String.format("%-20s" + "%-4s", "Front Slash! ", "(/)") );
+            countSpecialCharacters++;
+            temp = true;
+        }
+        if(fExt.contains("\\")){
+            System.out.println("[" + countSpecialCharacters + "] " );
+            System.out.println("Back Slash! (\\)");
+            temp = true;
+        }
+        if(fExt.contains("?")){
+            System.out.println("[" + countSpecialCharacters + "] " );
+            System.out.println("Question Mark! (?)");
+            temp = true;
+        }
+        if(fExt.contains("\"")){
+            System.out.println("[" + countSpecialCharacters + "] " );
+            System.out.println("Double Quotes! (\")");
+            temp = true;
+        }
+        if(fExt.contains(":")){
+            System.out.println("Colon (:)");
+            temp = true;
+        }
+        if(fExt.contains("|")){
+            System.out.println("Unicode: U+01C0 \u05C0 Character: Vertical Line! (\u01C0)");
+            temp = true;
+        }
+        if(fExt.contains("<")){
+            System.out.println("Unicode: U+01C0 \u05C0 Character: Less Than! (\u003C)");
+            temp = true;
+        }
+        if(fExt.contains(">")){
+            System.out.println("Unicode: U+01C0 \u05C0 Character: Greater Than! (\u003E)");
+            temp = true;
+        }
+        if(fExt.contains("*")){
+            System.out.println("Unicode: U+01C0 \u05C0 Character: Asterisk! (\u002A)");
+            temp = true;
+        }
+
+        return temp;
+        //  Time Stamp: 30th October 2K18, 01:53 PM!
     }
 
     private String obtainFilePath() {
@@ -242,7 +397,7 @@ public class BasicByteStream {
 
         //  fPath must always consist of '/' directory delimiter
         //  & character at its last index must be '/'.
-        OutputStream fos = new FileOutputStream(filePath + fileName + fileExt, appendFlag);
+        OutputStream fos = new FileOutputStream(filePath + fileName + "." + fileExt, appendFlag);
 
         try {
 
@@ -265,7 +420,7 @@ public class BasicByteStream {
     }
 
     private void displaySuccessMsg() {
-        System.out.println("File |" + fileName + "| successfully created in the following directory");
+        System.out.println("File |" + fileName + "." + fileExt + "| successfully created in the following directory,");
         System.out.println(filePath);
     }
 
@@ -294,7 +449,7 @@ public class BasicByteStream {
 
 /*
  * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 28th October 2K18, 10:18 PM!
+ * Date Modified: 30th October 2K18, 01:53 PM!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
