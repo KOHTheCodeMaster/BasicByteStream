@@ -14,7 +14,8 @@ public class BasicByteStream {
     private String fileExt = null;
     private String fileData = null;
     private boolean appendFlag;
-
+    private static final short FILE_NAME_MAX_LENGTH = 250;
+    private static final byte FILE_EXTENSION_MAX_LENGTH = 50;
 
     public static void main(String[] args) throws FileNotFoundException {
 
@@ -73,17 +74,46 @@ public class BasicByteStream {
 
     private void obtainFileDetails() {
 
-        fileName = obtainFileName();
-        fileExt = obtainFileExt();
+        boolean invalidFlag = true;
+
+        while (invalidFlag) {
+            //  Prompt User for File Name!
+            fileName = obtainFileName();
+
+            //  Validate the file name input by user!
+            invalidFlag = validation(fileName, "File Name");
+            if(invalidFlag)
+            System.out.println("Please Try Again...");
+        }
+
+        invalidFlag = true;
+
+        while (invalidFlag) {
+            //  Prompt User for File Extension!
+            fileExt = obtainFileExt();
+
+            //  Validate the file name input by user!
+            invalidFlag = validation(fileExt, "File Extension");
+            if(invalidFlag)
+                System.out.println("Please Try Again...");
+        }
+
+        //  Prompt User for the File Path!
         filePath = obtainFilePath();
 
         //  Check if file already exists & Prompt User for append or overwrite!
         appendFlag = wannaAppend();
 
+        //  Prompt User for content to be written in file.
         fileData = obtainFileData();
 
-        //  Validations required!
+        //  Validations required! (wanna Append)
 
+    }
+
+    private String obtainFileExt() {
+        System.out.print("Enter File Extention (Only ALPHA-Numeric Charset. without any period) : ");
+        return scanner.nextLine();
     }
 
     private String obtainFileName() {
@@ -91,7 +121,67 @@ public class BasicByteStream {
         return scanner.nextLine();
     }
 
-    private String obtainFileExt() {
+    private boolean validation(String fPart, String printTag) {
+
+        if( isItEmpty(fPart, printTag) )
+            return true;    //  given fPart i.e. fileName or fileExtension is Empty!
+        else if( isItBlank(fPart, printTag) )
+            return true;    //  given fPart i.e. fileName or fileExtension is Blank!
+        else if( doesMaxLimitExceed(fPart, printTag, FILE_NAME_MAX_LENGTH) )
+            return true;
+        else if( consistsSpecialCharacter(fPart, printTag) )
+            return true;   //  given fPart consists Special Characters!
+        else if( containsWhiteSpace(fPart, printTag) )
+            return true;   //  given fPart contains white spaces!
+        else
+            return false;   //  given fPart i.e. fileName or fileExtension is valid!
+    }
+
+    private boolean containsWhiteSpace(String fPart, String printTag) {
+        //  Check if there's any white space character in between of the file extension.
+
+        boolean whiteSpaceFlag = false;
+
+        char [] temp = fPart.trim().toCharArray();
+        for (int i = 0; i < temp.length; i++) {
+            char c = temp[i];
+            if (Character.isWhitespace(c)) {
+                System.out.println("Please do not enter any white space character in the file extension." +
+                        "\n (Unicode: " + Character.codePointAt(temp, i) + " | Character: '" + temp[i] + "')");
+
+                //  needs this method for the above statement!
+                //  String appendZeroes(int codePoint, int numLength);
+                whiteSpaceFlag = true;
+            }
+        }
+
+        //  Raise Warning to user if there's any unnecessary white space characters at the
+        //  beginning or at the end of the File Extension.
+        if(fPart.charAt(0) == ' ' || fPart.charAt(fPart.length() -1) == ' '){
+            System.out.print("Warning:\nAdditional Spaces found at: ");
+        }
+        if(fPart.charAt(0) == ' ') {
+            System.out.print("Beginning, ");
+        }
+        if (fPart.charAt(fPart.length() -1) == ' ') {
+            System.out.println("End, ");
+        }
+
+        return whiteSpaceFlag;
+    }
+
+    private boolean doesMaxLimitExceed(String fPart, String printTag, short maxLength) {
+
+        if(fPart.length() > FILE_EXTENSION_MAX_LENGTH){
+            System.out.println(printTag + " Length Limit Exceeded (" + maxLength +
+                    " Characters)\nPlease try again...");
+            return true;
+        }
+        return false;
+
+    }
+
+    private String obtainFileExtOld() {
         //  Time Stamp: 30th October 2K18, 11:04 AM!
         String fExt = "";
         char[] temp = null;
@@ -106,27 +196,24 @@ public class BasicByteStream {
             fExt = scanner.nextLine();
 
             //  Check if fExt is Empty.
-            if(fExt.isEmpty()){
-                System.out.println("File Extension can't be EMPTY!\nPlease try again...");
+            if ( isItEmpty(fExt, "File Extension") ) {
                 invalidFileExtension = true;
                 continue;
             }
-
             //  Check if fExt is only White Space.
-            if(fExt.isBlank()){
-                System.out.println("File Extension Contains only White Spaces!\nPlease try again...");
+            if ( isItEmpty(fExt, "File Extension") ){
                 invalidFileExtension = true;
                 continue;
             }
 
-            if(fExt.length() > 250){
+            if(fExt.length() > FILE_EXTENSION_MAX_LENGTH){
                 System.out.println("File Extension Length Limit Exceeded (250 Characters)\nPlease try again...");
                 invalidFileExtension = true;
                 continue;
             }
 
             //  Validate for any special characters.
-            if( consistsSpecialCharacter(fExt) ){
+            if( consistsSpecialCharacter(fExt, "File Extension") ){
                 invalidFileExtension = true;
                 System.out.println("Please Try Again...");
                 continue;
@@ -175,71 +262,123 @@ public class BasicByteStream {
         //  Time Stamp: 30th October 2K18, 01:53 PM!
     }
 
-    private boolean consistsSpecialCharacter(String fExt) {
-        //  Time Stamp: 30th October 2K18, 11:04 AM!
+    private boolean isItEmpty(String fPart, String printTag) {
 
+        //  fPart   => fileName     | fileExtension
+        //  str => "File Name" or "File Extension"
         boolean temp = false;
-        int countSpecialCharacters;
-        countSpecialCharacters = 1;
-
-        System.out.println("Do not enter any of the following special characters: ");
-        //  Hebrew Punctuation Paseq (U+05C0) Big Vertical Line used as separator between Unicode & Character!
-
-        //  Required!
-        //  Display in the following format, but remove this line if no special char. found!
-        //  Sr. No.  |  Unicode  |  Character Symbol  |
-
-        if(fExt.contains(".")){
-            System.out.print("[" + countSpecialCharacters + "] " );
-            System.out.println("Periods or Dots! (.)");
-            countSpecialCharacters++;
+        if(fPart.isEmpty()){
+            System.out.println(printTag + " can't be EMPTY!\nPlease try again...");
             temp = true;
         }
-        if(fExt.contains("/")){
-            System.out.print("[" + countSpecialCharacters + "] ");
-            System.out.println(String.format("%-20s" + "%-4s", "Front Slash! ", "(/)") );
-            countSpecialCharacters++;
-            temp = true;
-        }
-        if(fExt.contains("\\")){
-            System.out.println("[" + countSpecialCharacters + "] " );
-            System.out.println("Back Slash! (\\)");
-            temp = true;
-        }
-        if(fExt.contains("?")){
-            System.out.println("[" + countSpecialCharacters + "] " );
-            System.out.println("Question Mark! (?)");
-            temp = true;
-        }
-        if(fExt.contains("\"")){
-            System.out.println("[" + countSpecialCharacters + "] " );
-            System.out.println("Double Quotes! (\")");
-            temp = true;
-        }
-        if(fExt.contains(":")){
-            System.out.println("Colon (:)");
-            temp = true;
-        }
-        if(fExt.contains("|")){
-            System.out.println("Unicode: U+01C0 \u05C0 Character: Vertical Line! (\u01C0)");
-            temp = true;
-        }
-        if(fExt.contains("<")){
-            System.out.println("Unicode: U+01C0 \u05C0 Character: Less Than! (\u003C)");
-            temp = true;
-        }
-        if(fExt.contains(">")){
-            System.out.println("Unicode: U+01C0 \u05C0 Character: Greater Than! (\u003E)");
-            temp = true;
-        }
-        if(fExt.contains("*")){
-            System.out.println("Unicode: U+01C0 \u05C0 Character: Asterisk! (\u002A)");
-            temp = true;
-        }
-
         return temp;
-        //  Time Stamp: 30th October 2K18, 01:53 PM!
     }
+
+    private boolean isItBlank(String fPart, String printTag) {
+
+        //  fPart   => fileName     | fileExtension
+        //  printTag     => "File Name"  | "File Extension"
+        boolean temp = false;
+        if(fPart.isBlank()){
+            System.out.println(printTag + " contains only White Spaces!\nPlease try again...");
+            temp = true;
+        }
+        return temp;
+    }
+
+
+        private boolean consistsSpecialCharacter(String fPart, String printTag) {
+            //  Time Stamp: 30th October 2K18, 11:04 AM!
+
+            boolean temp = false;
+            int countSpecialCharacters;
+            countSpecialCharacters = 1;
+
+            //  Hebrew Punctuation Paseq (U+05C0) Big Vertical Line used as separator between Unicode & Character!
+
+            //  Required!
+            //  Display in the following format, but remove this line if no special char. found!
+            //  Sr. No.  |  Unicode  |  Character Symbol  |
+            if (fPart.contains("/") || fPart.contains("\\") || fPart.contains(":") || fPart.contains("|") ||
+                    fPart.contains("<") || fPart.contains(">") || fPart.contains("?") || fPart.contains("\"") ||
+                    fPart.contains("*") || (!printTag.equals("File Name") && fPart.contains("."))) {
+
+                System.out.println("Do not enter any of the following special characters: ");
+                System.out.println("Sr. No.  |  Unicode  |  Symbol  |  Character  ");
+//            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", 1, "010A", "(\u002E)", "Period/Dot") );
+            }
+
+            if (fPart.contains("*")) {
+//            System.out.println("Unicode: U+01C0 \u05C0 Character: Asterisk! (\u002A)");
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "002A", "(\u002A)", "Asterisk!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+
+            if (fPart.contains(":")) {
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "003A", "(\u003A)", "Colon!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+
+            if (fPart.contains(">")) {
+//            System.out.println("Unicode: U+01C0 \u05C0 Character: Greater Than! (\u003E)");
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "003E", "(\u003E)", "Greater Than!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+            if (fPart.contains("<")) {
+//            System.out.println("Unicode: U+01C0 \u05C0 Character: Less Than! (\u003C)");
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "003C", "(\u003C)", "Less Than!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+            if (fPart.contains("?")) {
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "004F", "(\u003F)", "Question Mark!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+
+            if (fPart.contains("\"")) {
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "0022", "(\")", "Quotation Mark!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+            if (fPart.contains("\\")) {
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "005C", "(\\)", "Reverse Solidus!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+            if (fPart.contains("/")) {
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "002F", "(\u002F)", "Solidus!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+
+            if (fPart.contains("|")) {
+//            System.out.println("Unicode: U+01C0 \u05C0 Character: Vertical Line! (\u01C0)");
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "01C0", "(\u01C0)", "Vertical Line!"));
+                countSpecialCharacters++;
+                temp = true;
+            }
+            if (fPart.contains(".")) {
+                if (printTag.equals("File Name")) {
+                    if (fPart.indexOf('.') == fPart.length() - 1) {
+                        System.out.println("File Name can't end with a Period or Dot (.)");
+                        System.out.println();
+                        temp = true;
+                    }
+                } else {
+                    System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "002E", "(\u002E)", "Period / Dot!"));
+                    countSpecialCharacters++;
+                    temp = true;
+                }
+            }
+
+
+            return temp;
+            //  Time Stamp: 30th October 2K18, 01:53 PM!
+        }
 
     private String obtainFilePath() {
 
@@ -449,7 +588,7 @@ public class BasicByteStream {
 
 /*
  * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 30th October 2K18, 01:53 PM!
+ * Date Modified: 30th October 2K18, 09:48 PM!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
