@@ -15,7 +15,7 @@ public class BasicByteStream {
     private String fileData = null;
 
     private String localFileName = null;
-    private boolean possiblyDuplicate;      //  when fileName itself contains "(count)" at the end.
+    private boolean possiblyDuplicate = false;      //  when fileName itself contains "(count)" at the end.
 
     private boolean appendFlag;
     private static final int FILE_NAME_MAX_LENGTH = 250;
@@ -43,12 +43,19 @@ public class BasicByteStream {
             System.out.println("0. Exit!");
             System.out.print("Enter Choice: ?: ");
 
-            ch = scanner.nextInt();
-            scanner.nextLine(); //  Empty Buffer.
+            //  Prompt User for input, consider it as complete line of String at first.
+            String str = scanner.nextLine();
+
+            //  set ch to null character if the user enters more than 1 character.
+            if (str.length() > 1)
+                ch = '\0';
+            else
+                ch = str.charAt(0);
+
             switch (ch) {
 
                 //  Exit the Program!
-                case 0:
+                case '0':
                     System.out.println("Shutting Down the program.");
                     if (scanner != null) {
                         scanner.close();
@@ -56,11 +63,11 @@ public class BasicByteStream {
                     break;
 
                 //  Create New File!
-                case 1:
+                case '1':
                     /*
-                     * Obtain File Details from the User including: New File Name, Extension, Path,
-                     * if file already Exists then Prompt User for
-                     * Write Mode i.e. Append, Overwrite, Keep Both Files by renaming the new file accordingly.
+                     *  Obtain File Details from the User including: New File Name, Extension, Path,
+                     *  if file already Exists then Prompt User for Write Mode i.e.
+                     *  Append, Overwrite, Keep Both Files by renaming the new file accordingly.
                      */
                     obtainFileDetails();
 
@@ -71,7 +78,7 @@ public class BasicByteStream {
                 default:
                     System.out.println("Please Enter Valid Choice!");
             }
-        } while (ch != 0);
+        } while (ch != '0');
 //        Time Stamp: 28th October 2K18, 05:01 PM!
 
     }
@@ -100,6 +107,7 @@ public class BasicByteStream {
 
             //  Validate the file name input by user!
             if( hasUpperCase(fileExt) ){
+
                 System.out.println("Warning:\n" +
                         "Upper Case Characters found in file extension!");
                 System.out.println("Converting 'em to lower case characters!");
@@ -113,13 +121,15 @@ public class BasicByteStream {
         }
 
         //  Prompt User for the File Path!
-        filePath = obtainFilePath();
-
+//        filePath = obtainFilePath();
+        filePath = "./";
         //  Requirement: (Pending)
         //  Validate filePath!
 
         //  Check if file already exists & Prompt User for append or overwrite!
+//        System.out.println("fn: " + fileName);
         appendFlag = wannaAppend();
+//        System.out.println("fn: " + fileName);
 
         //  Prompt User for content to be written in file.
         fileData = obtainFileData();
@@ -155,7 +165,7 @@ public class BasicByteStream {
 
         //  return true if any character of str is a Digit.
         for(char c : str.toCharArray()){
-            if(c >= 'a' && c <= 'z')
+            if(c >= '0' && c <= '9')
                 return true;
         }
         return false;
@@ -342,7 +352,6 @@ public class BasicByteStream {
                 //  Check if the Period/Dot occurs at the end of the file name.
                 if (fPart.indexOf('.') == fPart.length() - 1) {
                     System.out.println("File Name can't end with a Period or Dot (.)");
-                    System.out.println();
                     temp = true;
                 }
             } else {
@@ -394,7 +403,9 @@ public class BasicByteStream {
         //  Raise Warning to user if there's any unnecessary white space characters at the
         //  beginning or at the end.
         if (fPart.charAt(0) == ' ' || fPart.charAt(fPart.length() - 1) == ' ') {
-            System.out.print("Warning:\nRemoving Additional Spaces found at: ");
+            System.out.print("Removing Additional Spaces found at: ");
+
+            //  Update fileName (trimming all unnecessary white spaces)
             if(printTag.equals("File Name"))
                 fileName = fileName.trim();
             else
@@ -534,7 +545,7 @@ public class BasicByteStream {
     private boolean wannaAppend() {
 
         //  temp is used to represent whether user wants to append the content to the existing file or not.
-        boolean temp = true;
+        boolean temp = false;
 
         int ch = 0;
         //  Check if the file already exists at the path specified.
@@ -542,8 +553,6 @@ public class BasicByteStream {
 
         if (fExists)
             System.out.println("There is already a file with the same name in this location!");
-        else
-            System.out.println("fN: (" + fileName + ") | fE: (" + fileExt + ")");
 
         /*
          * Increment the counter of new file name according to the last version of the existing file name.
@@ -579,7 +588,7 @@ public class BasicByteStream {
                     temp = false;
                     break;
                 case 3:
-                    //  To Keep both the files, rename the new file with count value of 1 more than
+                    //  To Keep both the files, update the fileName with localFileName i.e. count value of 1 more than
                     //  the last version of the existing file.
                     if (possiblyDuplicate)
                         fileName = localFileName;
@@ -598,86 +607,172 @@ public class BasicByteStream {
         //  Time Stamp: 31st October 2K18, 03:03 PM!
 
         //  Initially, the file already exists, so the rename count has to start with 1.
-        int tempCount = 1;
+        int count = 1;
 
         //  initialize localFileName with the given fileName.
         localFileName = fileName;
+//        boolean tmpExists = (new File(filePath + fileName + "." + fileExt).exists());
+        //  If file doesn't exists then return -1.
+        if (!(new File(filePath + fileName + "." + fileExt).exists())) {
+            return -1;
+        }
+        if (fileName.contains("(") && fileName.contains(")"))
+            possiblyDuplicate = true;
 
         // Requirement:
         // check if file name already consists the (1), then increment the count within the name itself.
 
-        //  check if the file name already consists "(count)"
+        //  check if the file name is in the format: "...(count)"
 
-        //  initialize j with the last character, most probably ')' for the special check.
-        int j = fileName.length() - 1;
+        labelSpecialCheck:
+        if(possiblyDuplicate) {
+            //  initialize j with the last character, most probably ')' for the special check.
+            int j = fileName.length() - 1;
 
-        //  Check for single Digit between parenthesis at the end of the String.
-        //  Example:    fileName (without extension) : "a (1)"  |   j = ')'
-        if (fileName.charAt(j) == ')') {
-            if (fileName.charAt(j - 2) == '(') {
-                if (fileName.charAt(j - 1) >= '0' && fileName.charAt(j - 1) <= '9') {
-                    //  until now, we've checked that the fileName is in the format:
-                    //  fileName: "...(singleDigit)"
+            //  Check for single Digit between parenthesis at the end of the String.
+            //  Example:    fileName (without extension) : "a (1)"  |   j = ')'
+            if (fileName.charAt(j) == ')') {
 
-                    //  initialize middleCounter with 0.
-                    int middleCounter = 0;
+                int k = 0;  //  k => number of digits between parenthesis.
 
-                    //  get the value of middle count present between the
-                    //  parenthesis & add to the middleCounter, in this case, its '1'.
-                    middleCounter += gatherCharValue(fileName.charAt(j - 1));
-                    //  thus, middleCounter = 1
+                //  Count num of Digits starting from the 2nd last char.
+                for (int i1 = fileName.length() - 2; i1 >= 0; i1--) {
 
-                    //  Decrement middleCounter by 1 as it'll be incremented in the while loop.
-//                    middleCounter--;
-                    //  Run the loop indefinitely,
-                    //  control returns back to the parent method when
-                    //  the localFileName with middleCounter doesn't exists.
-                    while (true) {
-//                        System.out.println("lFN Before: " + localFileName);
-//                        System.out.println("IC Before: " + middleCounter);
+                    //  Increment the counter if the char at i1 is a digit.
+                    if (hasDigit(fileName.charAt(i1) + "")) {
+                        k++;
+                    } else if ((fileName.charAt(i1) == '(')) {
 
-                        //  reset localFileName back to empty string.
-                        localFileName = "";
+                        //  If there is no digit between parenthesis, treat fileName as a complete string.
+                        if(k == 0){
+                            //  break out & follow the middleCounterCheck method for duplicate file check.
+                            break labelSpecialCheck;
+                        }
+//                        System.out.println("k.: " + k);
+//                        System.out.println("k.: " + Integer.MAX_VALUE);
 
-                        //  set localFileName with the original fileName
-                        //  leaving the last 2 characters i.e. middleCount & ')'
-                        localFileName = fileName.substring(0, fileName.length() - 2);
-                        localFileName += (middleCounter + ")");
-
-                        if (new File(filePath + localFileName + "." + fileExt).exists()) {
-                            middleCounter++;
-//                            System.out.println("lFN After: " + localFileName);
-//                            System.out.println("IC After : " + middleCounter);
-                        } else {
-                            System.out.println("IC 1: " + middleCounter);
-//                            localFileName = fileName.substring(0, fileName.length() - 2);
-//                            localFileName += (middleCounter + ")");
-                            System.out.println("lf 1: " + localFileName);
-                            possiblyDuplicate = true;
-                            return middleCounter;
+                        /*
+                         *  Time Stamp: 2nd November 2K18, 07:31 PM!
+                         *  if fileName contains more than 10 digits between parenthesis,
+                         *  it already exceeds the max. limit of counter i.e. Integer.MAX_VALUE!
+                         *  Treat the entire number between the parenthesis as a string,
+                         *  add another pair of parenthesis with 1 as the middle count.
+                         */
+                        if(k > 10) {
+                            System.out.println("Warning: Count Limit Exceeded! (2147483647)");
+//                            localFileName += " (1)";
+//                            return -1;
+                            break labelSpecialCheck;
+                        }
+                        break;
+                    } else {
+                        //  fileName ain't duplicate anymore.
+                        System.out.println(",");
+                        k = -1;
+                        return -1;
+                    }
+                }
+                if (fileName.charAt(j - (k + 1)) == '(') {
+                    count = 0;
+                    int c = j - k;
+                    for (int i1 = 0; i1 < k; i1++) {
+                        if (fileName.charAt(j - k) >= '0' && fileName.charAt(j - k) <= '9') {
+                            count = (count * 10) + gatherCharValue(fileName.charAt(c));
+                            System.out.println("tc: " + count);
+                            c++;
                         }
                     }
+//                    count++;
+//                    localFileName = fileName.substring(0, j - k);
+//                    localFileName += count + ")";
+                    String front = filePath + fileName.substring(0, j - k);    //  fileName: "a (101)" | front: path + "a ("
+//                    if(new File(filePath + localFileName + "." + fileExt).exists())
+                        System.out.println( count = middleCounterCheck( front, count) );
+
+                    localFileName = fileName.substring(0, j - k);
+                    localFileName += count + ")";
+                    System.out.println(localFileName);
+                    System.out.println("ret tc: " + count);
+                    possiblyDuplicate = true;
+                    return count;
                 }
             }
         }
 
-        for (int i = 1; i < 100; i++) {
+        /*
+         *  File Name ain't in the format: "...(count)", but file with given fileName already exists,
+         *  so we need to check if the "... (1)" file exists or not & keep incrementing the middle counter
+         *  until the file name with the middle count doesn't exists.
+         */
+//        else
+            count = existingCounterCheck();
+
+        return count;
+    }
+
+    /*
+     *  Time Stamp: 2nd November 2K18, 08:22 PM!
+     *  Until now, the fileName doesn't consists any ambiguous content.
+     *  fileName is treated entirely as fresh string & will be checked for any duplicate files with
+     *  count value present between a parenthesis.
+     *  Example:    fileName: "abc ()"
+     *              " (middleCount)" will be appended to it & checked if it already exists,
+     *              Keep incrementing the middleCounter until file doesn't exists.
+     *              Returning the value of middleCount.
+     */
+    private int existingCounterCheck() {
+
+        int middleCounter = 1;
+        while(true) {
             //  check if the file with next count (within the parenthesis) also already exists.
-            if (new File(filePath + fileName + " (" + i + ")" + "." + fileExt).exists()) {
+            if (new File(filePath + fileName + " (" + middleCounter + ")" + "." + fileExt).exists()) {
 
-                //  increase the counter if the file with next count value already exists.
-                tempCount++;
+                //  increase the counter if the file with next count value between parenthesis already exists.
+                //  i.e. if "... (17)" already exists, increment 17 to 18.
+                middleCounter++;
 
-                //  if the value of i goes above 8, either there are too many copies of the file,
+                //  if the value of counter goes above 20, either there are too many copies of the file,
                 //  or there is a bug in code. Hence, requires manual check for confirmation!
-                if (i > 20) {
+                if (middleCounter > 20) {
                     System.out.println("Too Many Duplicate Files!!!");
                     System.out.println("Check it quick!");
                 }
+            } else
+                break;
+        }
+
+        //  possiblyDuplicate case is already dealt above, now it ain't duplicate anymore.
+        possiblyDuplicate = false;
+        return middleCounter;
+    }
+
+    private int middleCounterCheck(String front, int initialCount) {
+        //  Time Stamp: 2nd November 2K18, 07:58 PM!
+
+        int middleCounter = initialCount;
+        while(true) {
+
+            if(middleCounter >= Integer.MAX_VALUE ){
+                System.out.println("Warning: Count Limit Exceeded! (2147483647)");
             }
+
+            //  check if the file with next count (within the parenthesis) also already exists.
+            if (new File(front + middleCounter + ")" + "." + fileExt).exists()) {
+
+                //  increase the counter if the file with next count value already exists.
+                middleCounter++;
+//                System.out.println(tempCount);
+                //  if the value of i goes above 8, either there are too many copies of the file,
+                //  or there is a bug in code. Hence, requires manual check for confirmation!
+                if (middleCounter > 20) {
+                    System.out.println("Too Many Duplicate Files!!!");
+                    System.out.println("Check it quick!");
+                }
+            } else
+                break;
         }
         possiblyDuplicate = false;
-        return tempCount;
+        return middleCounter;
     }
 
     private int gatherCharValue(char c) {
@@ -788,8 +883,7 @@ public class BasicByteStream {
 //        Time Stamp: 1st November 2K18, 05:42 PM!
 
         char ch = 0;
-        whileLoop:  //  label for while loop to help break statement distinguish between while loop & switch statement.
-        while (ch != 'n') {    //  exit the loop only when user opts to stop entering the content for file.
+        while (true) {    //  exit the loop only when user opts to stop entering the content for file.
             System.out.print("-----------------\nWant to Enter more content? (y/n) : ");
 
             //  Consider only the first character of the user's input word for the choice.
@@ -808,13 +902,11 @@ public class BasicByteStream {
                 case 'n':
                 case 'N':
 //                System.out.println(fData);
-                    break whileLoop;
+                    return false;
                 default:
                     System.out.println("Invalid Choice!\nPlease Try Again...");
             }
         }
-
-        return false;
     }
 
     private void createNewFile() throws FileNotFoundException {
@@ -847,7 +939,7 @@ public class BasicByteStream {
 
     private void displaySuccessMsg() {
         System.out.println("File |" + fileName + "." + fileExt + "| successfully created in the following directory,");
-        System.out.println(filePath);
+        System.out.println(new File("" + fileName + "." + fileExt).getAbsolutePath());
     }
 
     private String replaceReverseSolidus(String temp) {
@@ -859,14 +951,15 @@ public class BasicByteStream {
 
 /*
  * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 1st November 2K18, 06:35 PM!
+ * Date Modified: 2nd November 2K18, 08:43 PM!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
  */
 
 
-
+//  warning count   | Done!
+//  check file exists again before writing.
 
 
 
