@@ -8,18 +8,21 @@ public class BasicByteStream {
     private Scanner scanner = new Scanner(System.in);
     private static final String ABSOLUTE_FILE_PATH = "E:\\HEADQUARTERS..!!\\CodeBase\\Java\\CoreJava\\" +
             "FileHandling\\src\\dev\\koh\\filehandling\\res\\txtfiles\\";
+    private static final String DEFAULT_DIRECTORY_FILE_PATH = ".\\";
 
     private String filePath = null;
     private String fileName = null;
     private String fileExt = null;
     private String fileData = null;
 
-    private String localFileName = null;
     private boolean possiblyDuplicate = false;      //  when fileName itself contains "(count)" at the end.
+    private String localFileName = null;    //  Temporary file name required for possibly duplicate case.
 
-    private boolean appendFlag;
-    private static final int FILE_NAME_MAX_LENGTH = 250;
-    private static final int FILE_EXTENSION_MAX_LENGTH = 50;
+    private boolean appendFlag;     //  It Affects Write Mode | appendFlag: true -> Append, false -> Overwrite!
+    private boolean warningRaised = false;          //  For displaying "Warning:" msg. only once.
+    private static final int FILE_NAME_MAX_LENGTH = 250;    //  Maximum File Name Limit.
+    private static final int FILE_EXTENSION_MAX_LENGTH = 50;    //  Maximum File Extension Limit.
+    private boolean errorOccured = false;
 
     public static void main(String[] args) throws FileNotFoundException {
 
@@ -40,7 +43,7 @@ public class BasicByteStream {
         do {
             System.out.println("1. Create New File.");
 //            System.out.println("2. Read Existing File.");
-            System.out.println("0. Exit!");
+            System.out.println("0. Exit.");
             System.out.print("Enter Choice: ?: ");
 
             //  Prompt User for input, consider it as complete line of String at first.
@@ -76,7 +79,8 @@ public class BasicByteStream {
                     break;
 
                 default:
-                    System.out.println("Please Enter Valid Choice!");
+                    displayError();
+                    System.out.println("Please Enter Valid Choice!\n");
             }
         } while (ch != '0');
 //        Time Stamp: 28th October 2K18, 05:01 PM!
@@ -90,52 +94,78 @@ public class BasicByteStream {
         boolean invalidFlag = true;
 
         while (invalidFlag) {
+
+            //  Reset Warning & Error Flags to false.
+            resetFlags();
+
             //  Prompt User for File Name!
             fileName = obtainFileName();
 
             //  Validate the file name input by user!
             invalidFlag = validation(fileName, "File Name");
-            if (invalidFlag)
-                System.out.println("Please Try Again...");
+            if (invalidFlag) {
+//                displayWarning();
+                System.out.println("Please Try Again...\n");
+            }
         }
 
         invalidFlag = true;
 
         while (invalidFlag) {
+
+            //  Reset Warning & Error Flags to false.
+            resetFlags();
+
             //  Prompt User for File Extension!
             fileExt = obtainFileExt();
 
             //  Validate the file name input by user!
-            if( hasUpperCase(fileExt) ){
-
-                System.out.println("Warning:\n" +
-                        "Upper Case Characters found in file extension!");
-                System.out.println("Converting 'em to lower case characters!");
-                fileExt = fileExt.toLowerCase();
-            }
-
             invalidFlag = validation(fileExt, "File Extension");
+
+            //  If fileExt is invalid, check for upper case characters in fileExt.
+            //  display Warning Message stating the fileExt contains upper case character.
+            //  & update fileExt to lower case characters.
+            converToLowerCaseChar(invalidFlag);
+
             if (invalidFlag) {
-                System.out.println("Please Try Again...");
+//                displayWarning();
+                System.out.println("Please Try Again...\n");
             }
         }
 
         //  Prompt User for the File Path!
 //        filePath = obtainFilePath();
-        filePath = "./";
+        filePath = DEFAULT_DIRECTORY_FILE_PATH;
         //  Requirement: (Pending)
         //  Validate filePath!
 
         //  Check if file already exists & Prompt User for append or overwrite!
-//        System.out.println("fn: " + fileName);
         appendFlag = wannaAppend();
-//        System.out.println("fn: " + fileName);
 
         //  Prompt User for content to be written in file.
         fileData = obtainFileData();
 
         //  Validations required! (wanna Append)
 
+    }
+
+    private void converToLowerCaseChar(boolean invalidFlag) {
+        if(!invalidFlag)
+            if( hasUpperCase(fileExt) ) {
+                //  Display Warning Message.
+                displayWarning();
+                System.out.println("Upper Case Characters found in file extension!");
+                System.out.println("Converting 'em all to lower case!\n");
+
+                //  Update fileExt to all lower case characters.
+                fileExt = fileExt.toLowerCase();
+            }
+    }
+
+    //  Reset Warning & Error Flags to false.
+    private void resetFlags() {
+        setWarningRaised(false);
+        setErrorOccured(false);
     }
 
     private boolean hasUpperCase(String str) {
@@ -160,6 +190,7 @@ public class BasicByteStream {
         return false;
 
     }
+
     private boolean hasDigit(String str) {
         //  Time Stamp: 1st November 2K18, 06:10 PM!
 
@@ -169,7 +200,6 @@ public class BasicByteStream {
                 return true;
         }
         return false;
-
     }
 
     private String obtainFileExt() {
@@ -208,7 +238,8 @@ public class BasicByteStream {
         //  printTag => "File Name" or "File Extension"
         //  return true if fPart is an empty string.
         if (fPart.isEmpty()) {
-            System.out.println(printTag + " can't be EMPTY!\nPlease try again...");
+            displayError();
+            System.out.println(printTag + " can't be EMPTY!");
             return true;
         }
         //  fPart ain't empty, so return false.
@@ -221,7 +252,8 @@ public class BasicByteStream {
         //  printTag => "File Name"  | "File Extension"
         //  return true if fPart contains only white spaces.
         if (fPart.isBlank()) {
-            System.out.println(printTag + " contains only White Spaces!\nPlease try again...");
+            displayError();
+            System.out.println(printTag + " contains only White Spaces!");
             return true;
         }
         //  fPart ain't Blank, so return false.
@@ -232,8 +264,9 @@ public class BasicByteStream {
 
         //  return true if length of fPart exceeds max limit.
         if (fPart.length() > maxLength) {
-            System.out.println(printTag + " Length Limit Exceeded (" + maxLength +
-                    " Characters)\nPlease try again...");
+            displayError();
+            System.out.println(printTag + " Max. Length Limit Exceeded (" + maxLength +
+                    " Characters)");
             return true;
         }
         //  fPart length is within the max range, it doesn't exceeds max. limit. Hence, return false.
@@ -293,6 +326,7 @@ public class BasicByteStream {
                 fPart.contains("<") || fPart.contains(">") || fPart.contains("?") || fPart.contains("\"") ||
                 fPart.contains("*") || (!printTag.equals("File Name") && fPart.contains("."))) {
 
+            displayError();
             System.out.println("Do not enter any of the following special characters: ");
             System.out.println("Sr. No.  |  Unicode  |  Symbol  |  Character  ");
             //  the output will be displayed using the following manner.
@@ -351,6 +385,7 @@ public class BasicByteStream {
 
                 //  Check if the Period/Dot occurs at the end of the file name.
                 if (fPart.indexOf('.') == fPart.length() - 1) {
+                    displayError();
                     System.out.println("File Name can't end with a Period or Dot (.)");
                     temp = true;
                 }
@@ -385,8 +420,9 @@ public class BasicByteStream {
         for (int i = 0; i < temp.length; i++) {
             char c = temp[i];
             if (Character.isWhitespace(c)) {
+                displayError();
                 System.out.println("Please do not enter any white space character in the file extension." +
-                        "\n (Unicode: " + Character.codePointAt(temp, i) + " | Character: '" + temp[i] + "')");
+                        "\n (Unicode: " + Character.codePointAt(temp, i) + " | Character: '" + temp[i] + "')\n");
 
                 //  Requirement! (Pending)
                 //  needs this method for the above statement!
@@ -403,6 +439,7 @@ public class BasicByteStream {
         //  Raise Warning to user if there's any unnecessary white space characters at the
         //  beginning or at the end.
         if (fPart.charAt(0) == ' ' || fPart.charAt(fPart.length() - 1) == ' ') {
+            displayWarning();
             System.out.print("Removing Additional Spaces found at: ");
 
             //  Update fileName (trimming all unnecessary white spaces)
@@ -415,11 +452,11 @@ public class BasicByteStream {
         //  display whether the additional white spaces found at the beginning
         //  or at the end or at both the sides.
         if ((fPart.charAt(0) == ' ') && !(fPart.charAt(fPart.length() - 1) == ' ')) {
-            System.out.println("Beginning! ");
+            System.out.println("Beginning!\n");
         } else if (!(fPart.charAt(0) == ' ') && (fPart.charAt(fPart.length() - 1) == ' ')) {
-            System.out.println("End! ");
+            System.out.println("End!\n");
         } else if ((fPart.charAt(0) == ' ') && (fPart.charAt(fPart.length() - 1) == ' ')) {
-            System.out.println("Beginning & End!");
+            System.out.println("Beginning & End!\n");
         }
     }
 
@@ -450,7 +487,7 @@ public class BasicByteStream {
             }
 
             if (fExt.length() > FILE_EXTENSION_MAX_LENGTH) {
-                System.out.println("File Extension Length Limit Exceeded (250 Characters)\nPlease try again...");
+                System.out.println("File Extension Length Limit Exceeded (250 Characters)");
                 invalidFileExtension = true;
                 continue;
             }
@@ -458,7 +495,7 @@ public class BasicByteStream {
             //  Validate for any special characters.
             if (consistsSpecialCharacter(fExt, "File Extension")) {
                 invalidFileExtension = true;
-                System.out.println("Please Try Again...");
+//                System.out.println("Please Try Again...");
                 continue;
             }
 
@@ -481,7 +518,8 @@ public class BasicByteStream {
             //  Raise Warning to user if there's any unnecessary white space characters at the
             //  beginning or at the end of the File Extension.
             if (fExt.charAt(0) == ' ' || fExt.charAt(fExt.length() - 1) == ' ') {
-                System.out.println("Warning:\nAdditional Spaces found at: ");
+                displayWarning();
+                System.out.println("Additional Spaces found at: ");
                 unnecessaryWhiteSpace = true;
                 invalidFileExtension = false;
             }
@@ -535,7 +573,8 @@ public class BasicByteStream {
                     break;
 
                 default:
-                    System.out.println("Invalid Choice! Please Try Again...");
+                    displayError();
+                    System.out.println("Invalid Choice! Please Try Again...\n");
             }
 
         } while (ch != 1 && ch != 2);   //  Prompt user for input until user opts for a valid choice i.e. 1 or 2.
@@ -597,6 +636,7 @@ public class BasicByteStream {
                     temp = false;
                     break;
                 default:
+                    displayError();
                     System.out.println("Invalid Choice!\nPlease Try Again...\n");
             }
         }
@@ -626,30 +666,31 @@ public class BasicByteStream {
 
         labelSpecialCheck:
         if(possiblyDuplicate) {
-            //  initialize j with the last character, most probably ')' for the special check.
-            int j = fileName.length() - 1;
+            //  initialize lastIndex with the last index, most probably the index of ')' for the special check.
+            int lastIndex = fileName.length() - 1;
 
             //  Check for single Digit between parenthesis at the end of the String.
-            //  Example:    fileName (without extension) : "a (1)"  |   j = ')'
-            if (fileName.charAt(j) == ')') {
+            //  Example:    fileName (without extension) : "a (1)"  |   lastIndex = ')'
+            if (fileName.charAt(lastIndex) == ')') {
 
-                int k = 0;  //  k => number of digits between parenthesis.
+                int numOfDigits = 0;  //  numOfDigits => number of digits between parenthesis.
 
                 //  Count num of Digits starting from the 2nd last char.
                 for (int i1 = fileName.length() - 2; i1 >= 0; i1--) {
 
                     //  Increment the counter if the char at i1 is a digit.
                     if (hasDigit(fileName.charAt(i1) + "")) {
-                        k++;
+                        numOfDigits++;
                     } else if ((fileName.charAt(i1) == '(')) {
 
                         //  If there is no digit between parenthesis, treat fileName as a complete string.
-                        if(k == 0){
+                        if(numOfDigits == 0){
+                            //  fileName is in format: "...()"
                             //  break out & follow the middleCounterCheck method for duplicate file check.
                             break labelSpecialCheck;
                         }
-//                        System.out.println("k.: " + k);
-//                        System.out.println("k.: " + Integer.MAX_VALUE);
+//                        System.out.println("numOfDigits.: " + numOfDigits);
+//                        System.out.println("numOfDigits.: " + Integer.MAX_VALUE);
 
                         /*
                          *  Time Stamp: 2nd November 2K18, 07:31 PM!
@@ -658,41 +699,44 @@ public class BasicByteStream {
                          *  Treat the entire number between the parenthesis as a string,
                          *  add another pair of parenthesis with 1 as the middle count.
                          */
-                        if(k > 10) {
-                            System.out.println("Warning: Count Limit Exceeded! (2147483647)");
+                        if(numOfDigits > 10) {
+                            displayWarning();
+                            System.out.println("Count Limit Exceeded! (2147483647)");
 //                            localFileName += " (1)";
 //                            return -1;
                             break labelSpecialCheck;
                         }
                         break;
                     } else {
-                        //  fileName ain't duplicate anymore.
-                        System.out.println(",");
-                        k = -1;
-                        return -1;
+                        //  fileName ain't duplicate anymore, its simply in the form: "...)"
+                        break labelSpecialCheck;
                     }
                 }
-                if (fileName.charAt(j - (k + 1)) == '(') {
+                if (fileName.charAt(lastIndex - (numOfDigits + 1)) == '(') {
                     count = 0;
-                    int c = j - k;
-                    for (int i1 = 0; i1 < k; i1++) {
-                        if (fileName.charAt(j - k) >= '0' && fileName.charAt(j - k) <= '9') {
-                            count = (count * 10) + gatherCharValue(fileName.charAt(c));
-                            System.out.println("tc: " + count);
-                            c++;
+                    int currentIndex = lastIndex - numOfDigits;
+                    for (int i1 = 0; i1 < numOfDigits; i1++) {
+                        if (fileName.charAt(lastIndex - numOfDigits) >= '0'
+                                && fileName.charAt(lastIndex - numOfDigits) <= '9') {
+                            count = (count * 10) + gatherCharValue(fileName.charAt(currentIndex));
+                            currentIndex++;
                         }
                     }
 //                    count++;
-//                    localFileName = fileName.substring(0, j - k);
+//                    localFileName = fileName.substring(0, lastIndex - numOfDigits);
 //                    localFileName += count + ")";
-                    String front = filePath + fileName.substring(0, j - k);    //  fileName: "a (101)" | front: path + "a ("
+                    //  fileName: "a (101)" | front: path + "a ("
+                    String front = filePath + fileName.substring(0, lastIndex - numOfDigits);
 //                    if(new File(filePath + localFileName + "." + fileExt).exists())
-                        System.out.println( count = middleCounterCheck( front, count) );
+                    count = middleCounterCheck( front, count);
 
-                    localFileName = fileName.substring(0, j - k);
+                    //  if the count value is -1 i.e. file name violates the Max. Limit for count!
+                    if(count == -1){
+                        break labelSpecialCheck;
+                    }
+                    localFileName = fileName.substring(0, lastIndex - numOfDigits);
                     localFileName += count + ")";
                     System.out.println(localFileName);
-                    System.out.println("ret tc: " + count);
                     possiblyDuplicate = true;
                     return count;
                 }
@@ -700,8 +744,9 @@ public class BasicByteStream {
         }
 
         /*
-         *  File Name ain't in the format: "...(count)", but file with given fileName already exists,
-         *  so we need to check if the "... (1)" file exists or not & keep incrementing the middle counter
+         *  File Name ain't in the format: "...(count)", or it violated the Max. Count,
+         *  but file with given fileName already exists, so we need to check
+         *  if the "... (1)" file exists or not & keep incrementing the middle counter
          *  until the file name with the middle count doesn't exists.
          */
 //        else
@@ -734,6 +779,7 @@ public class BasicByteStream {
                 //  if the value of counter goes above 20, either there are too many copies of the file,
                 //  or there is a bug in code. Hence, requires manual check for confirmation!
                 if (middleCounter > 20) {
+                    displayWarning();
                     System.out.println("Too Many Duplicate Files!!!");
                     System.out.println("Check it quick!");
                 }
@@ -753,7 +799,9 @@ public class BasicByteStream {
         while(true) {
 
             if(middleCounter >= Integer.MAX_VALUE ){
-                System.out.println("Warning: Count Limit Exceeded! (2147483647)");
+                displayWarning();
+                System.out.println("Count Limit Exceeded! (2147483647)");
+                return -1;
             }
 
             //  check if the file with next count (within the parenthesis) also already exists.
@@ -765,6 +813,7 @@ public class BasicByteStream {
                 //  if the value of i goes above 8, either there are too many copies of the file,
                 //  or there is a bug in code. Hence, requires manual check for confirmation!
                 if (middleCounter > 20) {
+                    displayWarning();
                     System.out.println("Too Many Duplicate Files!!!");
                     System.out.println("Check it quick!");
                 }
@@ -798,6 +847,7 @@ public class BasicByteStream {
             case '\u0039':
                 return 9;
             default:
+                displayError();
                 System.out.println("Char Value Error!");
                 return -1;
         }
@@ -875,7 +925,12 @@ public class BasicByteStream {
 //        Time Stamp: 1st November 2K18, 05:42 PM!
         System.out.println("Content to be written in File:");
         System.out.println("----------------------");
-        System.out.println(fData);
+
+        //  If appending, then skip printing the first new line character on the console.
+        if(appendFlag)
+            System.out.println(fData.substring(1));
+        else
+            System.out.println(fData);
         System.out.println("----------------------");
     }
 
@@ -904,6 +959,7 @@ public class BasicByteStream {
 //                System.out.println(fData);
                     return false;
                 default:
+                    displayError();
                     System.out.println("Invalid Choice!\nPlease Try Again...");
             }
         }
@@ -941,25 +997,59 @@ public class BasicByteStream {
         System.out.println("File |" + fileName + "." + fileExt + "| successfully created in the following directory,");
         System.out.println(new File("" + fileName + "." + fileExt).getAbsolutePath());
     }
+    private void displayWarning() {
+        //  Time Stamp: 4th November 2K18, 11:55 AM!
+
+        //  If there's already a warning given before, do not print it multiple times.
+        //  Simply skip printing "Warning:" as its already been done before.
+        if(!isWarningRaised()) {
+            System.out.println("Warning:");
+            setWarningRaised(true);
+        }
+    }
+    private void displayError() {
+        //  Time Stamp: 4th November 2K18, 11:55 AM!
+
+        //  If there's already a Error given before, do not print it multiple times.
+        //  Simply skip printing "Error:" as its already been done before.
+        if(!isErrorOccured()) {
+            System.out.println("Error:");
+            setErrorOccured(true);
+        }
+    }
 
     private String replaceReverseSolidus(String temp) {
-
         return temp.replace('\\', '/');
     }
 
+    public boolean isWarningRaised() {
+        return warningRaised;
+    }
+
+    public boolean isErrorOccured() {
+        return errorOccured;
+    }
+
+    public void setWarningRaised(boolean warningRaised) {
+        this.warningRaised = warningRaised;
+    }
+
+    public void setErrorOccured(boolean errorOccured) {
+        this.errorOccured = errorOccured;
+    }
 }
 
 /*
  * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 2nd November 2K18, 08:43 PM!
+ * Date Modified: 4th November 2K18, 02:01 PM!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
  */
 
 
-//  warning count   | Done!
-//  check file exists again before writing.
+//  warning count   | Pending!
+//  check file exists again before writing. Pending.
 
 
 
