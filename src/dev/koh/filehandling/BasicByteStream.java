@@ -46,12 +46,13 @@ public class BasicByteStream {
             System.out.println("0. Exit.");
             System.out.print("Enter Choice: ?: ");
 
-            //  Prompt User for input, consider it as complete line of String at first.
-            choice = userInputInt();   //  take input from user as String but then return as int.
+            //  Prompt User for input (input: string, parse it in: int).
+            choice = userInputInt();   //  take input from user as String but then parse it in int.
 
+            //  Validate the user input.
             switch (choice) {
 
-                //  Exit the Program!
+                //  In case of user input: "0", |   Exit the Program!
                 case 0:
                     System.out.println("Shutting Down the program.");
                     if (scanner != null) {
@@ -59,11 +60,11 @@ public class BasicByteStream {
                     }
                     break;
 
-                //  Create New File!
+                //  In case of user input: "0", |   Create New File!
                 case 1:
                     /*
                      *  Obtain File Details from the User including: New File Name, Extension, Path,
-                     *  if file already Exists then Prompt User for Write Mode i.e.
+                     *  if file already exists then Prompt the User for Write Mode i.e.
                      *  Append, Overwrite, Keep Both Files by renaming the new file accordingly.
                      */
                     obtainFileDetails();
@@ -72,26 +73,52 @@ public class BasicByteStream {
                     createNewFile();
                     break;
 
+                /*
+                 *  Time Stamp: 5th November 2K18, 12:06 PM..!!
+                 *  In case of User Input other than the desired ones i.e. [0, 1]
+                 *  for suitable errors, if else statements are used inside the default case so
+                 *  that, first of all, the error msg. could be printed for every invalid choice,
+                 *  then listing the particular reason stating what's wrong in user input.
+                 */
                 default:
                     displayError();
-//                    System.out.println(choice);
+
                     if (choice == -2)
                         System.out.println("Choice can't be Empty!");
                     else if (choice == -3)
                         System.out.println("Choice can't be Blank!");
                     else if (choice == -4)
-                        System.out.println("Choice must be a Single Character!");
+                        System.out.println("Choice must be a Single Number!");
                     else if (choice == -5)
-                        System.out.println("Choice must be a Single Numeric Digit Only!");
-                    else
-                        System.out.println("Select the Choice between: 0 and 1 Only!");
-                    System.out.println("Please Enter Valid Choice!\n");
+                        System.out.println("Choice must be a Single Numeric Digit only!");
+
+                    //  In case of user input is logically wrong but single digit character. (" 7 ")
+                    //  handle it by resetting the choice value to null character i.e. -1.
+                    else {
+                        System.out.println("Select the Choice between: 0 and 1 only!");
+                        choice = -1;
+                    }
+                System.out.println("Please enter valid choice!\n");
             }
+            //  Keep prompting user for input until & unless its either
+            //  0 for exit (get out of while loop) or 1 for proceeding further into program.
         } while (choice != 0);
 //        Time Stamp: 28th October 2K18, 05:01 PM!
 
     }
 
+    /*
+     *  Time Stamp: 5th November 2K18, 12:18 PM..!!
+     *  Prompt User for Input, consider it as String, but then parse it into a single digit int.
+     *  Return suitable int values for various error msgs. i.e.
+     *  Return Value    :       Error
+     *  ---------------------------------
+     *      -2          :       Empty
+     *      -3          :       Blank
+     *      -4          :   Multiple Char
+     *      -5          :     Other Char
+     *      0-9         :       Valid
+     */
     private int userInputInt() {
         //  Time Stamp: 4th November 2K18, 10:22 PM..!!
 
@@ -99,57 +126,127 @@ public class BasicByteStream {
         //  to single digit & return it back as int.
         String str = scanner.nextLine();
 
+        //  In case of Empty User Input, return -2.
         if ( str.isEmpty() )
             return -2;
+        //  In case of User Input containing only white space characters, return -3.
         if ( str.isBlank() )
             return -3;
 
+        //  Trim the User Input off of its unnecessary white space characters from the beginning & end.
         str = str.trim();
+
+        //  In case of multiple characters input by user, return -4.
         if(str.length() > 1) {
             return -4;
         }
 
-        //  if the single character input by user is a digit, return that digit
-        //  character parsed as int.
+        //  if the user input is a single digit excluding white spaces,
+        //  return that digit character parsed as int.
         if ( hasDigit(str) )
             return Integer.parseInt(str.charAt(0) + "");
-        //  For rest of the characters, prompt user again for the correct input.
+        //  For rest of the characters, prompt user again for the correct input
+        //  by returning -5.
         else
             return -5;
     }
+
+    /*
+     *  Time Stamp: 5th November 2K18, 12:22 PM..!!
+     *  Prompt User for Input, consider it as String, but then return by parsing it into a single alphabet character.
+     *  Return suitable char values for various error msgs. i.e.
+     *  Return Value    :       Error
+     *  ---------------------------------
+     *      '2'         :       Empty
+     *      '3'         :       Blank
+     *      '4'         :   Multiple Char
+     *      '5'         :     Other Char
+     *     'a-zA-z'     :       Valid
+     */
     private char userInputChar() {
         //  Time Stamp: 4th November 2K18, 10:22 PM..!!
 
         //  temporary variable for storing user's choice as String then return it back as char.
         String str = scanner.nextLine();
 
-        if ( isItEmpty(str, "Choice") )
+        //  In case of Empty User Input, return '2'.
+        if ( str.isEmpty() )
             return '2';
 
-        if ( isItBlank(str, "Choice") )
+        //  In case of User Input containing only white space characters, return '3'.
+        if ( str.isBlank() )
             return '3';
 
+        //  Trim the User Input off of its unnecessary white space characters from the beginning & end.
         str = str.trim();
+
+        //  In case of multiple characters input by user, return '4'.
         if ( str.length() > 1 )
             return '4';
 
-        //  if its a single alphabet (lower/upper) character then return it as a char.
+        //  if user input is a single alphabet (lower/upper) character excluding white spaces, then return it as a char.
         if ( hasLowerCase(str) || hasUpperCase(str) )
             return str.charAt(0);
 
         //  For rest of the characters, prompt user again for the correct input
-        //  by returning null character.
+        //  by returning '5'.
         else
-            return '\0';
+            return '5';
     }
 
+    private String userInputString() {
+        //  Time Stamp: 5th November 2K18, 01:48 PM..!!
+
+        //  temporary variable for storing user's choice as String then return it back as char.
+        String str = scanner.nextLine();
+
+        //  In case of Empty User Input, return '2'.
+        if ( str.isEmpty() )
+            return "2";
+
+        //  In case of User Input containing only white space characters, return '3'.
+        if ( str.isBlank() )
+            return "3";
+
+        //  Trim the User Input off of its unnecessary white space characters from the beginning & end.
+        str = str.trim();
+
+        //  In case of multiple characters input by user, return '4'.
+        if ( str.length() > 1 )
+            return "4";
+
+        //  if user input is a single alphabet (lower/upper) character excluding white spaces, then return it as a char.
+        if ( hasLowerCase(str) || hasUpperCase(str) )
+            return str.charAt(0) + "";
+
+            //  For rest of the characters, prompt user again for the correct input
+            //  by returning '5'.
+        else
+            return "5";
+    }
+
+
+    /*
+     *  Time Stamp: 5th November 2K18, 12:24 PM..!!
+     *  Prompt User for Input for each line new line to be written into the file.
+     *  Return suitable char values for various error msgs. i.e.
+     *  Return Value    :       Error
+     *  ---------------------------------
+     *      '2'         :       Empty
+     *      '3'         :       Blank
+     *      '4'         :   Multiple Char
+     *      '5'         :     Other Char
+     *     'a-zA-z'     :       Valid
+     */
     private void obtainFileDetails() {
         //  Time Stamp: 1st November 2K18, 06:10 PM..!!
 
+        //  invalidFlag ->  true: invalid   |   false:  valid
         //  Initialize invalidFlag with true for the sake of 1st iteration of while loop.
         //  (do while loop could also be used as an alternative.)
         boolean invalidFlag = true;
 
+        //  Prompt User to input: file name.
         while (invalidFlag) {
 
             //  Reset Warning & Error Flags to false.
@@ -160,14 +257,14 @@ public class BasicByteStream {
 
             //  Validate the file name input by user!
             invalidFlag = validation(fileName, "File Name");
-            if (invalidFlag) {
-//                displayWarning();
+            if (invalidFlag)
                 System.out.println("Please Try Again...\n");
-            }
         }
 
+        //  Reset invalidFlag to true for next user input for file extension.
         invalidFlag = true;
 
+        //  Prompt User to input: file extension.
         while (invalidFlag) {
 
             //  Reset Warning & Error Flags to false.
@@ -176,23 +273,21 @@ public class BasicByteStream {
             //  Prompt User for File Extension!
             fileExt = obtainFileExt();
 
-            //  Validate the file name input by user!
+            //  Validate the file extension input by user!
             invalidFlag = validation(fileExt, "File Extension");
 
-            //  If fileExt is invalid, check for upper case characters in fileExt.
+            //  In case of fileExt is valid, check for upper case characters in fileExt.
             //  display Warning Message stating the fileExt contains upper case character.
             //  & update fileExt to lower case characters.
             converToLowerCaseChar(invalidFlag);
 
-            if (invalidFlag) {
-//                displayWarning();
+            if (invalidFlag)
                 System.out.println("Please Try Again...\n");
-            }
         }
 
         //  Prompt User for the File Path!
-//        filePath = obtainFilePath();
-        filePath = DEFAULT_DIRECTORY_FILE_PATH;
+        filePath = obtainFilePath();
+//        filePath = DEFAULT_DIRECTORY_FILE_PATH;
         //  Requirement: (Pending)
         //  Validate filePath!
 
@@ -271,26 +366,38 @@ public class BasicByteStream {
         return scanner.nextLine();
     }
 
+    /*
+     *  Time Stamp: 5th November 2K18, 12:52 PM..!!
+     *  Validate fileName & fileExt according to their set of rules.
+     *
+     */
     private boolean validation(String fPart, String printTag) {
+
+        //  fPart:  fileName    |   fileExt
+        //  printTag:   "File Name" |   "File Extension"
 
         //  set maxLength according to the printTag which indicates whether validation method is
         //  invoked for fileName or fileExt.
         int maxLength = (printTag.equals("File Name") ? FILE_NAME_MAX_LENGTH : FILE_EXTENSION_MAX_LENGTH);
 
         if (isItEmpty(fPart, printTag))
-            return true;    //  given fPart i.e. fileName or fileExtension is Empty!
-        else if (isItBlank(fPart, printTag))
-            return true;    //  given fPart i.e. fileName or fileExtension is Blank!
-        else if (doesMaxLimitExceed(fPart, printTag, maxLength))
+            return true;    //  fPart is Empty!
+        else if (isItBlank(fPart, printTag))    //  fPart is Blank i.e. contains only white space characters!
             return true;
-        else if (consistsSpecialCharacter(fPart, printTag))
-            return true;   //  given fPart consists Special Characters!
-        else if (containsWhiteSpace(fPart, printTag))
-            return true;   //  given fPart contains white spaces!
-        else
-            return false;   //  given fPart i.e. fileName or fileExtension is valid!
+        else if (doesMaxLimitExceed(fPart, printTag, maxLength))//  fPart exceeds Max. Char. Limit.
+            return true;
+        else if (consistsSpecialCharacter(fPart, printTag)) //  fPart consists illegal characters!
+            return true;
+        else if (containsWhiteSpace(fPart, printTag))   //  fPart contains unnecessary white spaces.
+            return true;
+        else                //  fPart i.e. fileName or fileExtension is valid!
+            return false;
     }
 
+    /*
+     *  Time Stamp: 5th November 2K18, 12:43 PM..!!
+     *  Check for empty string & state warning
+     */
     private boolean isItEmpty(String fPart, String printTag) {
 
         //  fPart    => fileName     | fileExtension
@@ -376,62 +483,79 @@ public class BasicByteStream {
         //  Following statement is the Header which occurs only when there is any special characters.
         //  Sr. No.  |  Unicode  |  Character Symbol  |
 
-        //  First of all, Check once if fPart violates the naming rule i.e. contains any of the Special Characters
+        //  First of all, Check once if fPart violates the naming rule i.e. contains any of the illegal Characters
         //  then only print the Header followed by the occurences of special characters in the tabular form
-        //  in ascending order based on their character name.
-        //  Otherwise do not print the Header & the table representing the special characters.
+        //  in ascending order based on their Unicode Values.
+        //  Otherwise do not print the Header & the table representing the illegal characters.
         if (fPart.contains("/") || fPart.contains("\\") || fPart.contains(":") || fPart.contains("|") ||
                 fPart.contains("<") || fPart.contains(">") || fPart.contains("?") || fPart.contains("\"") ||
                 fPart.contains("*") || (!printTag.equals("File Name") && fPart.contains("."))) {
-
             displayError();
             System.out.println("Do not enter any of the following special characters: ");
             System.out.println("Sr. No.  |  Unicode  |  Symbol  |  Character  ");
-            //  the output will be displayed using the following manner.
-//            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", 1, "010A", "(\u002E)", "Period/Dot") );
+        }
+        //  Check for individual constraints of illegal character occurrence.
+
+        if (fPart.contains("\"")) {
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "0022", "(\")", "Quotation Mark!"));
+            countSpecialCharacters++;
+            temp = true;
         }
         if (fPart.contains("*")) {
             System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "002A", "(\u002A)", "Asterisk!"));
             countSpecialCharacters++;
             temp = true;
         }
-        if (fPart.contains(":")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "003A", "(\u003A)", "Colon!"));
+        if (fPart.contains(".")) {
+            if (printTag.equals("File Extension")) {
+                //  File Extension can't contain any Periods/Dots as we've hardcoded
+                //  the single dot '.' explicitly as a connector between file name & file extension.
+                //  which is required as a separator between the file name & extension.
+                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                        countSpecialCharacters, "002E", "(\u002E)", "Period / Dot!"));
+                temp = true;
+            }
+        }
+
+        if (fPart.contains("/")) {
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "002F", "(\u002F)", "Solidus!"));
             countSpecialCharacters++;
             temp = true;
         }
-        if (fPart.contains(">")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "003E", "(\u003E)", "Greater Than!"));
+        if (fPart.contains(":")) {
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "003A", "(\u003A)", "Colon!"));
             countSpecialCharacters++;
             temp = true;
         }
         if (fPart.contains("<")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "003C", "(\u003C)", "Less Than!"));
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "003C", "(\u003C)", "Less Than!"));
+            countSpecialCharacters++;
+            temp = true;
+        }
+        if (fPart.contains(">")) {
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "003E", "(\u003E)", "Greater Than!"));
             countSpecialCharacters++;
             temp = true;
         }
         if (fPart.contains("?")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "004F", "(\u003F)", "Question Mark!"));
-            countSpecialCharacters++;
-            temp = true;
-        }
-        if (fPart.contains("\"")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "0022", "(\")", "Quotation Mark!"));
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "004F", "(\u003F)", "Question Mark!"));
             countSpecialCharacters++;
             temp = true;
         }
         if (fPart.contains("\\")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "005C", "(\\)", "Reverse Solidus!"));
-            countSpecialCharacters++;
-            temp = true;
-        }
-        if (fPart.contains("/")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "002F", "(\u002F)", "Solidus!"));
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "005C", "(\\)", "Reverse Solidus!"));
             countSpecialCharacters++;
             temp = true;
         }
         if (fPart.contains("|")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "01C0", "(\u01C0)", "Vertical Line!"));
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "01C0", "(\u01C0)", "Vertical Line!"));
             countSpecialCharacters++;
             temp = true;
         }
@@ -447,14 +571,10 @@ public class BasicByteStream {
                     System.out.println("File Name can't end with a Period or Dot (.)");
                     temp = true;
                 }
-            } else {
-                //  File Extension can't contain any Periods/Dots as we've hardcoded the single dot '.'
-                //  which is required as a separator between the file name & extension.
-                System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "002E", "(\u002E)", "Period / Dot!"));
-                temp = true;
             }
         }
 
+        //  If fPart contains any illegal character until now, temp would be false, otherwise true.
         return temp;
         //  Time Stamp: 30th October 2K18, 01:53 PM!
     }
@@ -498,19 +618,28 @@ public class BasicByteStream {
         //  Raise Warning to user if there's any unnecessary white space characters at the
         //  beginning or at the end.
 
+        //  Remove if any additional white space present at beginning or at the end.
         if (hasWhiteSpace(fPart)) {
             displayWarning();
             System.out.print("Removing Additional Spaces found at: ");
 
-            //  Update fileName (trimming all unnecessary white spaces)
+            //  Update fileName or fileExtension accordingly. (trimming all unnecessary white spaces)
             if(printTag.equals("File Name"))
                 fileName = fileName.trim();
             else
                 fileExt = fileExt.trim();
         }
+        //  Display additional white space character occurrence.
+        displayAdditionalWhiteSpaceFoundAt(fPart);
+    }
 
-        //  display whether the additional white spaces found at the beginning
-        //  or at the end or at both the sides.
+    /*
+     *  Time Stamp: 5th November 2K18, 01:14 PM..!!
+     *  Display whether the additional white spaces found at the beginning
+     *  or at the end or at both the sides.
+     */
+    private void displayAdditionalWhiteSpaceFoundAt(String fPart) {
+
         if ((fPart.charAt(0) == ' ') && !(fPart.charAt(fPart.length() - 1) == ' ')) {
             System.out.println("Beginning!\n");
         } else if (!(fPart.charAt(0) == ' ') && (fPart.charAt(fPart.length() - 1) == ' ')) {
@@ -520,122 +649,42 @@ public class BasicByteStream {
         }
     }
 
-    //  Returns True if the str contains additional white space.
+    //  Returns True if the str contains additional white space at beginning or at the end.
     private boolean hasWhiteSpace(String str) {
         //  Time Stamp: 4th November 2K18, 06:23 PM!
         return ( str.charAt(0) == ' ' || str.charAt(str.length() - 1) == ' ' );
     }
 
-    private String obtainFileExtOld() {
-        //  Time Stamp: 30th October 2K18, 11:04 AM!
-        String fExt = "";
-        char[] temp = null;
-        boolean invalidFileExtension = false;
-        boolean unnecessaryWhiteSpace = false;
-
-        outerLoop:
-        //  label : "do while" loop!
-        do {
-            invalidFileExtension = false;
-            System.out.println("---------------------");
-            System.out.print("Enter File Extention (Only ALPHA-Numeric Charset. without any period) : ");
-            fExt = scanner.nextLine();
-
-            //  Check if fExt is Empty.
-            if (isItEmpty(fExt, "File Extension")) {
-                invalidFileExtension = true;
-                continue;
-            }
-            //  Check if fExt is only White Space.
-            if (isItEmpty(fExt, "File Extension")) {
-                invalidFileExtension = true;
-                continue;
-            }
-
-            if (fExt.length() > FILE_EXTENSION_MAX_LENGTH) {
-                System.out.println("File Extension Length Limit Exceeded (250 Characters)");
-                invalidFileExtension = true;
-                continue;
-            }
-
-            //  Validate for any special characters.
-            if (consistsSpecialCharacter(fExt, "File Extension")) {
-                invalidFileExtension = true;
-//                System.out.println("Please Try Again...");
-                continue;
-            }
-
-            //  Check if there's any white space character in between of the file extension.
-            temp = fExt.trim().toCharArray();
-            for (int i = 0; i < temp.length; i++) {
-                char c = temp[i];
-                if (Character.isWhitespace(c)) {
-                    System.out.println("Please do not enter any white space character in the file extension." +
-                            " (Unicode: " + Character.codePointAt(temp, i) + " | Character: '" + temp[i] + "')");
-
-                    //  needs this method for the above statement!
-                    //  String appendZeroes(int codePoint, int numLength);
-
-                    invalidFileExtension = true;
-                    continue outerLoop;
-                }
-            }
-
-            //  Raise Warning to user if there's any unnecessary white space characters at the
-            //  beginning or at the end of the File Extension.
-            if (fExt.charAt(0) == ' ' || fExt.charAt(fExt.length() - 1) == ' ') {
-                displayWarning();
-                System.out.println("Additional Spaces found at: ");
-                unnecessaryWhiteSpace = true;
-                invalidFileExtension = false;
-            }
-            if (fExt.charAt(0) == ' ') {
-                System.out.print("Beginning, ");
-            }
-            if (fExt.charAt(fExt.length() - 1) == ' ') {
-                System.out.println("End, ");
-            }
-
-            //  Trim any unnecessary white space characters from the beginning and the end of the File Extension.
-            if (unnecessaryWhiteSpace) {
-                System.out.println("Removing Unnecessary White Spaces from the File Extension: " +
-                        "\"" + fExt + "\"");
-                System.out.println("File Extension Trimmed to: \"" + fExt.trim() + "\"");
-            }
-
-        } while (invalidFileExtension);
-
-        return fExt.trim(); //  return the valid file extension.
-        //  Time Stamp: 30th October 2K18, 01:53 PM!
-    }
-
-
+    /*
+     *  Time Stamp: 5th November 2K18, 01:28 PM..!!
+     *  Obtain File Path from User,
+     *  either Default Directory or Explicitly Absolute Path Input by User.
+     */
     private String obtainFilePath() {
 
         String fPath = null;
         int ch = 0;
+
         do {
-            System.out.println("Choose File Path:\n1. Default: " + ABSOLUTE_FILE_PATH);
+            System.out.println("Choose File Path:\n1. Default: " + new File(DEFAULT_DIRECTORY_FILE_PATH).getAbsolutePath());
             System.out.println("2. Enter Path Manually. ");
 
             //  ch -> user's input.
-            ch = scanner.nextInt();
-
-            //  clear the return or space character from the buffer.
-            scanner.nextLine();
+            ch = userInputInt();
 
             switch (ch) {
 
                 //  Default Path.
                 case 1:
-                    fPath = ABSOLUTE_FILE_PATH;
+                    fPath = DEFAULT_DIRECTORY_FILE_PATH;
                     break;
 
                 //  Manually Input Complete Path.
                 case 2:
-                    System.out.println("Enter New File Path: ");
-                    fPath = scanner.nextLine(); //  Accept entire path for the new file.
-                    //  Validation required.
+                    //  Prompt user for file path & validate it.
+//                    fPath = gatherFilePath();
+                    //  VALIDATION PENDING!
+
                     break;
 
                 default:
@@ -645,6 +694,29 @@ public class BasicByteStream {
 
         } while (ch != 1 && ch != 2);   //  Prompt user for input until user opts for a valid choice i.e. 1 or 2.
         return fPath;   //  return the selected new file path.
+    }
+
+    private String gatherFilePath() {
+
+        boolean invalidFlag = true;
+        String fPath = "";
+
+        while (invalidFlag) {
+            System.out.println("Enter New File Path: ");
+
+            //  Reset Warning & Error Flags to false.
+            resetFlags();
+
+            //  Prompt User for File Name!
+            fPath = scanner.nextLine(); //  Accept entire path for the new file.
+
+            //  Validate the file name input by user!
+            invalidFlag = validation(fileName, "File Path");
+            if (invalidFlag)
+                System.out.println("Please Try Again...\n");
+        }
+
+        return fPath;
     }
 
     private boolean wannaAppend() {
@@ -685,6 +757,7 @@ public class BasicByteStream {
                 System.out.println("3. Keep Both Files, Renaming the new file as \"" + fileName + " (" +
                         rnCount + ")" + "." + fileExt + "\"");
 //            System.out.println("4. Go Back!");
+            resetFlags();
             ch = userInputInt();
 
             switch (ch) {
@@ -707,16 +780,17 @@ public class BasicByteStream {
                     break;
                 default:
                     displayError();
-                    if (ch == '2')      //  In case of only Empty input by user.
+                    if (ch == -2 )      //  In case of only Empty input by user.
                         System.out.println("Choice can't be Empty!");
-                    else if (ch == '3')  //  In case of only white space characters input by user.
+                    else if (ch == -3 )  //  In case of only white space characters input by user.
                         System.out.println("Choice can't be Blank!");
-                    else if (ch == '4')     //  In case of More than 1 character input by user.
+                    else if (ch == -4 )     //  In case of More than 1 character input by user.
                         System.out.println("Choice must be a Single Character!");
-                    else if (ch == '5')     //  Other Cases.
+                    else if (ch == -5 )     //  Other Cases.
                         System.out.println("Choice must be a Single Numeric Digit Only!");
-
-                    System.out.println("Please Enter Valid Choice!\n");
+                    else
+                        System.out.println("Select the Choice between: 0 and 1 only!");
+                    System.out.println("Please enter a valid choice!\n");
             }
         }
         return result;
@@ -768,8 +842,6 @@ public class BasicByteStream {
                             //  break out & follow the middleCounterCheck method for duplicate file check.
                             break labelSpecialCheck;
                         }
-//                        System.out.println("numOfDigits.: " + numOfDigits);
-//                        System.out.println("numOfDigits.: " + Integer.MAX_VALUE);
 
                         /*
                          *  Time Stamp: 2nd November 2K18, 07:31 PM!
@@ -781,8 +853,6 @@ public class BasicByteStream {
                         if(numOfDigits > 10) {
                             displayWarning();
                             System.out.println("Count Limit Exceeded! (2147483647)");
-//                            localFileName += " (1)";
-//                            return -1;
                             break labelSpecialCheck;
                         }
                         break;
@@ -801,12 +871,8 @@ public class BasicByteStream {
                             currentIndex++;
                         }
                     }
-//                    count++;
-//                    localFileName = fileName.substring(0, lastIndex - numOfDigits);
-//                    localFileName += count + ")";
                     //  fileName: "a (101)" | front: path + "a ("
                     String front = filePath + fileName.substring(0, lastIndex - numOfDigits);
-//                    if(new File(filePath + localFileName + "." + fileExt).exists())
                     count = middleCounterCheck( front, count);
 
                     //  if the count value is -1 i.e. file name violates the Max. Limit for count!
@@ -828,7 +894,6 @@ public class BasicByteStream {
          *  if the "... (1)" file exists or not & keep incrementing the middle counter
          *  until the file name with the middle count doesn't exists.
          */
-//        else
             count = existingCounterCheck();
 
         return count;
@@ -888,7 +953,7 @@ public class BasicByteStream {
 
                 //  increase the counter if the file with next count value already exists.
                 middleCounter++;
-//                System.out.println(tempCount);
+
                 //  if the value of i goes above 8, either there are too many copies of the file,
                 //  or there is a bug in code. Hence, requires manual check for confirmation!
                 if (middleCounter > 20) {
@@ -897,8 +962,13 @@ public class BasicByteStream {
                     System.out.println("Check it quick!");
                 }
             } else
+                //  In case of file doesn't exists with the middleCounter in between parenthesis,
+                //  Stop incrementing the counter & break out of while loop.
                 break;
         }
+
+        //  Set possiblyDuplicate to false as the value of middleCounter is optimized accordingly
+        //  & no duplicacy issue anymore.
         possiblyDuplicate = false;
         return middleCounter;
     }
@@ -981,7 +1051,7 @@ public class BasicByteStream {
 
         char ch = 0;
         while (true) {    //  exit the loop only when user opts to stop entering the content for file.
-            System.out.print("Want to Enter more content? (y/n) : ");
+            System.out.print("Want to enter more content? (y/n) : ");
 
             //  Consider only the first character of the user's input word for the choice.
             ch = userInputChar();
@@ -990,33 +1060,40 @@ public class BasicByteStream {
                 case 'y':
                 case 'Y':
 
-                //  Continue Prompting the user for entering another line content.
+                    //  Continue Prompting the user for entering another line content.
                     return true;
                 case 'n':
                 case 'N':
 //                System.out.println(fData);
                     return false;
 
+                /*
+                 *  Time Stamp: 5th November 2K18, 12:02 PM..!!
+                 *  In case of User Input other than the desired ones i.e. [y, Y, n, N]
+                 *  for suitable errors, if else statements are used inside the default case so
+                 *  that, first of all, the error msg. could be printed for every invalid choice,
+                 *  then listing the particular reason stating what's wrong in user input.
+                 */
                 default:
                     displayError();
                     if (ch == '2')      //  In case of only Empty input by user.
                         System.out.println("Choice can't be Empty!");
-                    else if (ch== '3')  //  In case of only white space characters input by user.
+                    else if (ch == '3') //  In case of only white space characters input by user.
                         System.out.println("Choice can't be Blank!");
-                    else if (ch == '4')     //  In case of More than 1 character input by user.
+                    else if (ch == '4') //  In case of More than 1 character input by user.
                         System.out.println("Choice must be a Single Character!");
-                    else if (ch == '5')     //  Other Cases.
-                        System.out.println("Choice must be a Single Alphabet Character Only!");
-                    else
-                        System.out.println("Select the Choice among: [y, Y, n, N] Only!");
-                    System.out.println("Please Enter Valid Choice!\n");
+                    else if (ch == '5') //  In case of wrong yet single character input. (" 5 ")
+                        System.out.println("Choice must be a Single Alphabet Character only!");
+                    else //  In case of wrong (yet syntactically correct) but single alphabet character input (" a ").
+                        System.out.println("Select the Choice among: [y, Y, n, N] only!");
+                    System.out.println("Please enter valid choice!\n");
             }
         }
     }
 
     private void createNewFile() throws FileNotFoundException {
 //        Time Stamp: 22nd October 2K18, 4:17 PM!
-//        Time Stamp: 28th October 2K18, 08:16 PM!
+//Updated Time Stamp: 28th October 2K18, 08:16 PM!
 
         //  fPath must always consist of '/' directory delimiter
         //  & character at its last index must be '/'.
@@ -1043,7 +1120,10 @@ public class BasicByteStream {
     }
 
     private void displaySuccessMsg() {
-        System.out.println("File |" + fileName + "." + fileExt + "| successfully created in the following directory,");
+        if(appendFlag)
+            System.out.println("File |" + fileName + "." + fileExt + "| successfully updated in the following directory,");
+        else
+            System.out.println("File |" + fileName + "." + fileExt + "| successfully created in the following directory,");
         System.out.println(new File("" + fileName + "." + fileExt).getAbsolutePath());
     }
     private void displayWarning() {
@@ -1090,7 +1170,7 @@ public class BasicByteStream {
 
 /*
  * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 4th November 2K18, 10:41 PM!
+ * Date Modified: 5th November 2K18, 02:39 PM!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
