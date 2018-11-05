@@ -82,23 +82,25 @@ public class BasicByteStream {
                  */
                 default:
                     displayError();
-
-                    if (choice == -2)
+                    if (choice == -2)      //  In case of only Empty input by user.
                         System.out.println("Choice can't be Empty!");
-                    else if (choice == -3)
+                    else if (choice == -3)  //  In case of only white space characters input by user.
                         System.out.println("Choice can't be Blank!");
-                    else if (choice == -4)
-                        System.out.println("Choice must be a Single Number!");
-                    else if (choice == -5)
-                        System.out.println("Choice must be a Single Numeric Digit only!");
+                    else if (choice == -4)     //  In case of More than 1 character input by user.
+                        System.out.println("Choice must be a Single Character!");
+                    else if (choice == -5)     //  In case of wrong/invalid input characters.
+                        System.out.println("Choice must be a Single Numeric Digit Only!");
 
-                    //  In case of user input is logically wrong but single digit character. (" 7 ")
-                    //  handle it by resetting the choice value to null character i.e. -1.
+                        /*
+                         *  In case of user input is logically wrong but a single digit character
+                         *  excluding white space. (" 7 ")
+                         *  Handle it by resetting the choice value to invalid character i.e. -1.
+                         */
                     else {
                         System.out.println("Select the Choice between: 0 and 1 only!");
                         choice = -1;
                     }
-                System.out.println("Please enter valid choice!\n");
+                    System.out.println("Please enter valid choice!\n");
             }
             //  Keep prompting user for input until & unless its either
             //  0 for exit (get out of while loop) or 1 for proceeding further into program.
@@ -127,26 +129,25 @@ public class BasicByteStream {
         String str = scanner.nextLine();
 
         //  In case of Empty User Input, return -2.
-        if ( str.isEmpty() )
+        if (str.isEmpty())
             return -2;
         //  In case of User Input containing only white space characters, return -3.
-        if ( str.isBlank() )
+        if (str.isBlank())
             return -3;
 
         //  Trim the User Input off of its unnecessary white space characters from the beginning & end.
         str = str.trim();
 
         //  In case of multiple characters input by user, return -4.
-        if(str.length() > 1) {
+        if (str.length() > 1) {
             return -4;
         }
 
         //  if the user input is a single digit excluding white spaces,
         //  return that digit character parsed as int.
-        if ( hasDigit(str) )
+        if (hasDigit(str))
             return Integer.parseInt(str.charAt(0) + "");
-        //  For rest of the characters, prompt user again for the correct input
-        //  by returning -5.
+            //  For rest of the characters, prompt user again for the correct input by returning -5.
         else
             return -5;
     }
@@ -170,26 +171,26 @@ public class BasicByteStream {
         String str = scanner.nextLine();
 
         //  In case of Empty User Input, return '2'.
-        if ( str.isEmpty() )
+        if (str.isEmpty())
             return '2';
 
         //  In case of User Input containing only white space characters, return '3'.
-        if ( str.isBlank() )
+        if (str.isBlank())
             return '3';
 
         //  Trim the User Input off of its unnecessary white space characters from the beginning & end.
         str = str.trim();
 
         //  In case of multiple characters input by user, return '4'.
-        if ( str.length() > 1 )
+        if (str.length() > 1)
             return '4';
 
         //  if user input is a single alphabet (lower/upper) character excluding white spaces, then return it as a char.
-        if ( hasLowerCase(str) || hasUpperCase(str) )
+        if (hasLowerCase(str) || hasUpperCase(str))
             return str.charAt(0);
 
-        //  For rest of the characters, prompt user again for the correct input
-        //  by returning '5'.
+            //  For rest of the characters, prompt user again for the correct input
+            //  by returning '5'.
         else
             return '5';
     }
@@ -201,28 +202,22 @@ public class BasicByteStream {
         String str = scanner.nextLine();
 
         //  In case of Empty User Input, return '2'.
-        if ( str.isEmpty() )
+        if (str.isEmpty())
             return "2";
 
         //  In case of User Input containing only white space characters, return '3'.
-        if ( str.isBlank() )
+        if (str.isBlank())
             return "3";
 
         //  Trim the User Input off of its unnecessary white space characters from the beginning & end.
         str = str.trim();
 
-        //  In case of multiple characters input by user, return '4'.
-        if ( str.length() > 1 )
+        //  In case of user input begins with a Digit, return '4'.
+        if (hasDigit(str.charAt(0) + ""))
             return "4";
-
-        //  if user input is a single alphabet (lower/upper) character excluding white spaces, then return it as a char.
-        if ( hasLowerCase(str) || hasUpperCase(str) )
-            return str.charAt(0) + "";
-
-            //  For rest of the characters, prompt user again for the correct input
-            //  by returning '5'.
+            //  For rest of the characters, return the string as it is for further validation.
         else
-            return "5";
+            return str;
     }
 
 
@@ -287,9 +282,6 @@ public class BasicByteStream {
 
         //  Prompt User for the File Path!
         filePath = obtainFilePath();
-//        filePath = DEFAULT_DIRECTORY_FILE_PATH;
-        //  Requirement: (Pending)
-        //  Validate filePath!
 
         //  Check if file already exists & Prompt User for append or overwrite!
         appendFlag = wannaAppend();
@@ -297,14 +289,12 @@ public class BasicByteStream {
         //  Prompt User for content to be written in file.
         fileData = obtainFileData();
 
-        //  Validations required! (wanna Append)
-
     }
 
     private void converToLowerCaseChar(boolean invalidFlag) {
         //  Time Stamp: 4th November 2K18, 10:22 PM..!!
-        if(!invalidFlag)
-            if( hasUpperCase(fileExt) ) {
+        if (!invalidFlag)
+            if (hasUpperCase(fileExt)) {
                 //  Display Warning Message.
                 displayWarning();
                 System.out.println("Upper Case Characters found in file extension!");
@@ -326,8 +316,8 @@ public class BasicByteStream {
         //  Time Stamp: 1st November 2K18, 06:10 PM..!!
 
         //  return true if any character of str is Upper Case.
-        for(char c : str.toCharArray()){
-            if(c >= 'A' && c <= 'Z')
+        for (char c : str.toCharArray()) {
+            if (c >= 'A' && c <= 'Z')
                 return true;
         }
         return false;
@@ -337,8 +327,8 @@ public class BasicByteStream {
         //  Time Stamp: 1st November 2K18, 06:10 PM..!!
 
         //  return true if any character of str is Lower Case.
-        for(char c : str.toCharArray()){
-            if(c >= 'a' && c <= 'z')
+        for (char c : str.toCharArray()) {
+            if (c >= 'a' && c <= 'z')
                 return true;
         }
         return false;
@@ -349,8 +339,8 @@ public class BasicByteStream {
         //  Time Stamp: 1st November 2K18, 06:10 PM!
 
         //  return true if any character of str is a Digit.
-        for(char c : str.toCharArray()){
-            if(c >= '0' && c <= '9')
+        for (char c : str.toCharArray()) {
+            if (c >= '0' && c <= '9')
                 return true;
         }
         return false;
@@ -588,7 +578,7 @@ public class BasicByteStream {
         removeAdditionalWhiteSpace(fPart, printTag);
 
         //  fileName can contain whiteSpaces, so no additional validations required,
-        if (printTag.equals("File Name")){
+        if (printTag.equals("File Name")) {
             return false;
         }
 
@@ -624,7 +614,7 @@ public class BasicByteStream {
             System.out.print("Removing Additional Spaces found at: ");
 
             //  Update fileName or fileExtension accordingly. (trimming all unnecessary white spaces)
-            if(printTag.equals("File Name"))
+            if (printTag.equals("File Name"))
                 fileName = fileName.trim();
             else
                 fileExt = fileExt.trim();
@@ -652,7 +642,7 @@ public class BasicByteStream {
     //  Returns True if the str contains additional white space at beginning or at the end.
     private boolean hasWhiteSpace(String str) {
         //  Time Stamp: 4th November 2K18, 06:23 PM!
-        return ( str.charAt(0) == ' ' || str.charAt(str.length() - 1) == ' ' );
+        return (str.charAt(0) == ' ' || str.charAt(str.length() - 1) == ' ');
     }
 
     /*
@@ -666,7 +656,8 @@ public class BasicByteStream {
         int ch = 0;
 
         do {
-            System.out.println("Choose File Path:\n1. Default: " + new File(DEFAULT_DIRECTORY_FILE_PATH).getAbsolutePath());
+            System.out.println("Choose File Path:\n1. Default: " +
+                    new File(DEFAULT_DIRECTORY_FILE_PATH).getAbsolutePath());
             System.out.println("2. Enter Path Manually. ");
 
             //  ch -> user's input.
@@ -682,43 +673,66 @@ public class BasicByteStream {
                 //  Manually Input Complete Path.
                 case 2:
                     //  Prompt user for file path & validate it.
-//                    fPath = gatherFilePath();
-                    //  VALIDATION PENDING!
-
+                    fPath = chooseFilePath();
                     break;
 
                 default:
                     displayError();
-                    System.out.println("Invalid Choice! Please Try Again...\n");
+                    if (ch == -2)      //  In case of only Empty input by user.
+                        System.out.println("Choice can't be Empty!");
+                    else if (ch == -3)  //  In case of only white space characters input by user.
+                        System.out.println("Choice can't be Blank!");
+                    else if (ch == -4)     //  In case of More than 1 character input by user.
+                        System.out.println("Choice must be a Single Character!");
+                    else if (ch == -5)     //  In case of wrong/invalid input characters.
+                        System.out.println("Choice must be a Single Numeric Digit Only!");
+                        //  In case of user input is logically wrong but a single digit character
+                        //  excluding white space. (" 7 ").
+                    else
+                        System.out.println("Select the Choice between: 0 and 1 only!");
+                    System.out.println("Please enter a valid choice!\n");
             }
 
         } while (ch != 1 && ch != 2);   //  Prompt user for input until user opts for a valid choice i.e. 1 or 2.
         return fPath;   //  return the selected new file path.
     }
 
-    private String gatherFilePath() {
+    /*
+     *  Time Stamp: 5th November 2K18, 08:23 PM..!!
+     *  Prompt User to input file path either absolute or relative,
+     *  validate the file path & return it as a string.
+     */
+    private String chooseFilePath() {
 
-        boolean invalidFlag = true;
         String fPath = "";
 
-        while (invalidFlag) {
-            System.out.println("Enter New File Path: ");
+        //  Keep Prompting user to input file path until its a valid one.
+        while (true) {
+            System.out.println("Enter Directory Path: ");
+            String str = userInputString();
 
-            //  Reset Warning & Error Flags to false.
-            resetFlags();
-
-            //  Prompt User for File Name!
-            fPath = scanner.nextLine(); //  Accept entire path for the new file.
-
-            //  Validate the file name input by user!
-            invalidFlag = validation(fileName, "File Path");
-            if (invalidFlag)
-                System.out.println("Please Try Again...\n");
+            //  Check if the file path is a directory & it already exists.
+            if ((new File(str).isDirectory()) && (new File(str).exists())) {
+                fPath = str;
+                break;
+            } else if (str.equals("2")) {   //  File Path is empty.
+                System.out.println("File Path can't be Empty!");
+            } else if (str.equals("3")) {   //  File Path is blank.
+                System.out.println("File Path can't be Blank!");
+            } else if (str.equals("4")) {   //  File Path begins with a digit.
+                System.out.println("File Path can't begin with a Digit!");
+            } else      //  //  File Path is invalid.
+                System.out.println("Invalid Path!\nPlease Try Again...");
         }
-
         return fPath;
     }
 
+    /*
+     *  Time Stamp: 5th November 2K18, 08:26 PM,
+     *  Check if the file already exists at the given directory with the same name,
+     *  if it does then prompt user with choice to either append, overwrite or keep both
+     *  the files by updating the file name with the count value accordingly.
+     */
     private boolean wannaAppend() {
 
         //  temp is used to represent whether user wants to append the content to the existing file or not.
@@ -780,14 +794,17 @@ public class BasicByteStream {
                     break;
                 default:
                     displayError();
-                    if (ch == -2 )      //  In case of only Empty input by user.
+                    if (ch == -2)      //  In case of only Empty input by user.
                         System.out.println("Choice can't be Empty!");
-                    else if (ch == -3 )  //  In case of only white space characters input by user.
+                    else if (ch == -3)  //  In case of only white space characters input by user.
                         System.out.println("Choice can't be Blank!");
-                    else if (ch == -4 )     //  In case of More than 1 character input by user.
+                    else if (ch == -4)     //  In case of More than 1 character input by user.
                         System.out.println("Choice must be a Single Character!");
-                    else if (ch == -5 )     //  Other Cases.
+                    else if (ch == -5)     //  In case of wrong / invalid input characters.
                         System.out.println("Choice must be a Single Numeric Digit Only!");
+
+                        //  In case of user input is logically wrong but a single digit character
+                        //  excluding white space. (" 7 ").
                     else
                         System.out.println("Select the Choice between: 0 and 1 only!");
                     System.out.println("Please enter a valid choice!\n");
@@ -812,13 +829,10 @@ public class BasicByteStream {
         if (fileName.contains("(") && fileName.contains(")"))
             possiblyDuplicate = true;
 
-        // Requirement:
-        // check if file name already consists the (1), then increment the count within the name itself.
-
         //  check if the file name is in the format: "...(count)"
 
         labelSpecialCheck:
-        if(possiblyDuplicate) {
+        if (possiblyDuplicate) {
             //  initialize lastIndex with the last index, most probably the index of ')' for the special check.
             int lastIndex = fileName.length() - 1;
 
@@ -837,9 +851,9 @@ public class BasicByteStream {
                     } else if ((fileName.charAt(i1) == '(')) {
 
                         //  If there is no digit between parenthesis, treat fileName as a complete string.
-                        if(numOfDigits == 0){
+                        if (numOfDigits == 0) {
                             //  fileName is in format: "...()"
-                            //  break out & follow the middleCounterCheck method for duplicate file check.
+                            //  break out & follow the gatherMiddleCounter method for duplicate file check.
                             break labelSpecialCheck;
                         }
 
@@ -850,7 +864,7 @@ public class BasicByteStream {
                          *  Treat the entire number between the parenthesis as a string,
                          *  add another pair of parenthesis with 1 as the middle count.
                          */
-                        if(numOfDigits > 10) {
+                        if (numOfDigits > 10) {
                             displayWarning();
                             System.out.println("Count Limit Exceeded! (2147483647)");
                             break labelSpecialCheck;
@@ -861,6 +875,13 @@ public class BasicByteStream {
                         break labelSpecialCheck;
                     }
                 }
+
+                /*
+                 *  Time Stamp: 5th November 2K18, 06:43 PM..!!
+                 *  fileName is in the format "...(number)"
+                 *  Extracting the number out of the string as char, parsing it into int,
+                 *  Storing it into count variable.
+                 */
                 if (fileName.charAt(lastIndex - (numOfDigits + 1)) == '(') {
                     count = 0;
                     int currentIndex = lastIndex - numOfDigits;
@@ -873,15 +894,19 @@ public class BasicByteStream {
                     }
                     //  fileName: "a (101)" | front: path + "a ("
                     String front = filePath + fileName.substring(0, lastIndex - numOfDigits);
-                    count = middleCounterCheck( front, count);
+
+                    //  Gather the count value for which the file name doesn't already exists.
+                    count = gatherMiddleCounter(front, count);
 
                     //  if the count value is -1 i.e. file name violates the Max. Limit for count!
-                    if(count == -1){
+                    if (count == -1) {
                         break labelSpecialCheck;
                     }
+
+                    //  set the localFileName with the valid fileName along with the valid middleCounter value.
                     localFileName = fileName.substring(0, lastIndex - numOfDigits);
                     localFileName += count + ")";
-                    System.out.println(localFileName);
+                    fileName = localFileName;
                     possiblyDuplicate = true;
                     return count;
                 }
@@ -894,7 +919,7 @@ public class BasicByteStream {
          *  if the "... (1)" file exists or not & keep incrementing the middle counter
          *  until the file name with the middle count doesn't exists.
          */
-            count = existingCounterCheck();
+        count = existingCounterCheck();
 
         return count;
     }
@@ -912,7 +937,7 @@ public class BasicByteStream {
     private int existingCounterCheck() {
 
         int middleCounter = 1;
-        while(true) {
+        while (true) {
             //  check if the file with next count (within the parenthesis) also already exists.
             if (new File(filePath + fileName + " (" + middleCounter + ")" + "." + fileExt).exists()) {
 
@@ -936,13 +961,19 @@ public class BasicByteStream {
         return middleCounter;
     }
 
-    private int middleCounterCheck(String front, int initialCount) {
+    private int gatherMiddleCounter(String front, int initialCount) {
         //  Time Stamp: 2nd November 2K18, 07:58 PM!
 
         int middleCounter = initialCount;
-        while(true) {
+        /*
+         *  Time Stamp: 5th November 2K18, 06:58 PM..!!
+         *  Keep Incrementing the middleCounter if the file name already exists with that count in between parenthesis.
+         *  Stop & return -1 if the counter value goes beyond the Max. Range i.e. Integer Max. Value!
+         *  Raise the Warning if the counter goes beyond 20.
+         */
+        while (true) {
 
-            if(middleCounter >= Integer.MAX_VALUE ){
+            if (middleCounter >= Integer.MAX_VALUE) {
                 displayWarning();
                 System.out.println("Count Limit Exceeded! (2147483647)");
                 return -1;
@@ -968,11 +999,12 @@ public class BasicByteStream {
         }
 
         //  Set possiblyDuplicate to false as the value of middleCounter is optimized accordingly
-        //  & no duplicacy issue anymore.
+        //  & no ambiguity issue anymore.
         possiblyDuplicate = false;
         return middleCounter;
     }
 
+    //  Extract int value from the character digit.
     private int gatherCharValue(char c) {
         switch (c) {
             case '\u0030':
@@ -1002,6 +1034,7 @@ public class BasicByteStream {
         }
     }
 
+    //  Prompt User for Content to be written in file.
     private String obtainFileData() {
         //  local variable for storing the file content i.e. String.
         String fData = "";
@@ -1018,8 +1051,8 @@ public class BasicByteStream {
             fData += scanner.nextLine();
 
             //  Prompt user for choice of entering more content in form of: (y/n)
-                //  Add New Line for every iteration.
-                fData += "\n";
+            //  Add New Line for every iteration.
+            fData += "\n";
 
         } while (repeatAgain());    //  exit the loop only when user opts to stop entering the content for file.
 
@@ -1028,6 +1061,7 @@ public class BasicByteStream {
         return fData;   //  return the local variable which contains the entire content of the file.
     }
 
+    //  Display the content to be written in the file.
     private void displayFileContentToBeWritten(String fData) {
 //        Time Stamp: 1st November 2K18, 05:42 PM!
 //Updated Time Stamp: 4th November 2K18, 10:22 PM..!!
@@ -1037,12 +1071,12 @@ public class BasicByteStream {
         System.out.println("----------------------");
 
         //  If appending, then skip printing the first & last characters i.e. '\n' on the console.
-        if(appendFlag)
-            System.out.println(fData.substring(1, fData.length()-1));
+        if (appendFlag)
+            System.out.println(fData.substring(1, fData.length() - 1));
 
-        //  Otherwise, skip printing the last character i.e. '\n' on the console.
+            //  Otherwise, skip printing the last character i.e. '\n' on the console.
         else
-            System.out.println(fData.substring(0, fData.length()-1));
+            System.out.println(fData.substring(0, fData.length() - 1));
         System.out.println("----------------------");
     }
 
@@ -1091,6 +1125,7 @@ public class BasicByteStream {
         }
     }
 
+    //  Create New File from all the details extracted, parsed & validated successfully.
     private void createNewFile() throws FileNotFoundException {
 //        Time Stamp: 22nd October 2K18, 4:17 PM!
 //Updated Time Stamp: 28th October 2K18, 08:16 PM!
@@ -1119,29 +1154,40 @@ public class BasicByteStream {
 //        Time Stamp: 22nd October 2K18, 4:53 PM!
     }
 
+    //  Display File Created / Updated successfully in particular directory.
     private void displaySuccessMsg() {
-        if(appendFlag)
-            System.out.println("File |" + fileName + "." + fileExt + "| successfully updated in the following directory,");
-        else
-            System.out.println("File |" + fileName + "." + fileExt + "| successfully created in the following directory,");
-        System.out.println(new File("" + fileName + "." + fileExt).getAbsolutePath());
+        String fileStatus = "";
+        fileStatus = appendFlag ? "updated" : "created";
+        System.out.println("File |" + fileName + "." + fileExt + "| successfully " + fileStatus + " in the following directory,");
+
+        //  Display Canonical Path of the directory of the file.
+        //  Canonical Path simply replaces "." & ".." symbolic links into respective absolute path.
+        try {
+            System.out.println(new File(filePath).getCanonicalPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+    //  If Warning has not been raised before, only then display Warning msg.
     private void displayWarning() {
         //  Time Stamp: 4th November 2K18, 11:55 AM!
 
         //  If there's already a warning given before, do not print it multiple times.
         //  Simply skip printing "Warning:" as its already been done before.
-        if(!isWarningRaised()) {
+        if (!isWarningRaised()) {
             System.out.println("Warning:");
             setWarningRaised(true);
         }
     }
+
+    //  If Error has not been raised before, only then display Error msg.
     private void displayError() {
         //  Time Stamp: 4th November 2K18, 11:55 AM!
 
         //  If there's already a Error given before, do not print it multiple times.
         //  Simply skip printing "Error:" as its already been done before.
-        if(!isErrorOccured()) {
+        if (!isErrorOccured()) {
             System.out.println("Error:");
             setErrorOccured(true);
         }
@@ -1170,7 +1216,7 @@ public class BasicByteStream {
 
 /*
  * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 5th November 2K18, 02:39 PM!
+ * Date Modified: 5th November 2K18, 08:42 PM!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
