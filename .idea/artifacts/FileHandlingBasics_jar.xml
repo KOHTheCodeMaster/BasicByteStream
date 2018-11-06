@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="FileHandlingBasics:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/FileHandlingBasics_jar</output-path>
+    <root id="archive" name="FileHandlingBasics.jar">
+      <element id="module-output" name="FileHandlingBasics" />
+    </root>
+  </artifact>
+</component>
