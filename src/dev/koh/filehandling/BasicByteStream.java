@@ -6,8 +6,8 @@ import java.util.Scanner;
 public class BasicByteStream {
 
     private Scanner scanner = new Scanner(System.in);
-    private static final String ABSOLUTE_FILE_PATH = "E:\\HEADQUARTERS..!!\\CodeBase\\Java\\CoreJava\\" +
-            "FileHandling\\src\\dev\\koh\\filehandling\\res\\txtfiles\\";
+    //    private static final String ABSOLUTE_FILE_PATH = "E:\\HEADQUARTERS..!!\\CodeBase\\Java\\CoreJava\\" +
+//            "FileHandling\\src\\dev\\koh\\filehandling\\res\\txtfiles\\";
     private static final String DEFAULT_DIRECTORY_FILE_PATH = ".\\";
 
     private String filePath = null;
@@ -22,7 +22,7 @@ public class BasicByteStream {
     private boolean warningRaised = false;          //  For displaying "Warning:" msg. only once.
     private static final int FILE_NAME_MAX_LENGTH = 250;    //  Maximum File Name Limit.
     private static final int FILE_EXTENSION_MAX_LENGTH = 50;    //  Maximum File Extension Limit.
-    private boolean errorOccured = false;
+    private boolean errorOccurred = false;
 
     public static void main(String[] args) throws FileNotFoundException {
 
@@ -309,7 +309,7 @@ public class BasicByteStream {
     private void resetFlags() {
         //  Time Stamp: 4th November 2K18, 10:22 PM..!!
         setWarningRaised(false);
-        setErrorOccured(false);
+        setErrorOccurred(false);
     }
 
     private boolean hasUpperCase(String str) {
@@ -409,7 +409,7 @@ public class BasicByteStream {
         //  return true if fPart contains only white spaces.
         if (fPart.isBlank()) {
             displayError();
-            System.out.println(printTag + " contains only White Spaces!");
+            System.out.println(printTag + " can't be Blank!");
             return true;
         }
         //  fPart ain't Blank, so return false.
@@ -487,12 +487,14 @@ public class BasicByteStream {
         //  Check for individual constraints of illegal character occurrence.
 
         if (fPart.contains("\"")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "0022", "(\")", "Quotation Mark!"));
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "0022", "(\")", "Quotation Mark!"));
             countSpecialCharacters++;
             temp = true;
         }
         if (fPart.contains("*")) {
-            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s", countSpecialCharacters, "002A", "(\u002A)", "Asterisk!"));
+            System.out.println(String.format("%4d     |  %5s    |  %5s   |  %s",
+                    countSpecialCharacters, "002A", "(\u002A)", "Asterisk!"));
             countSpecialCharacters++;
             temp = true;
         }
@@ -549,7 +551,14 @@ public class BasicByteStream {
             countSpecialCharacters++;
             temp = true;
         }
+/*
+        //  -----------------------------------------------------------------
+        //  Updated:                                                        |
+        //  Periods are allowed in file name, without any restriction even  |
+        //  the last character could be a period or dot.                    |
+        //  ----------------------------------------------------------------|
 
+        //  Old...
         //  Period/Dots are allowed in File Names unless its the last character,
         //  Thus, additional checking is required particularly in the case of file name.
         if (fPart.contains(".")) {
@@ -562,7 +571,7 @@ public class BasicByteStream {
                     temp = true;
                 }
             }
-        }
+        }*/
 
         //  If fPart contains any illegal character until now, temp would be false, otherwise true.
         return temp;
@@ -577,17 +586,26 @@ public class BasicByteStream {
         //  Remove any additional white spaces from the beginning & end if any.
         removeAdditionalWhiteSpace(fPart, printTag);
 
-        //  fileName can contain whiteSpaces, so no additional validations required,
-        if (printTag.equals("File Name")) {
-            return false;
-        }
-
         //  Remove any unnecessary white spaces from the fPart using trim() method & store its each character
         //  in the temp array.
         char[] temp = fPart.trim().toCharArray();
         for (int i = 0; i < temp.length; i++) {
             char c = temp[i];
             if (Character.isWhitespace(c)) {
+
+                /*
+                 *  Time Stamp: 8th November 2K18, 11:09 AM..!!
+                 *  Space character (unicode: 32) is allowed in File Name,
+                 *  but it can't contain any other white space characters
+                 *  including: Horizontal Tab, Form Feed, Return Cariage, Vertical Tab, etc.
+                 */
+                if (printTag.equals("File Name")) {
+                    //  Do not raise the error if the character found in file name is
+                    //  a space character with unicode value of 32.
+                    if (c == 32)
+                        continue;
+                }
+
                 displayError();
                 System.out.println("Please do not enter any white space character in the file extension." +
                         "\n (Unicode: " + Character.codePointAt(temp, i) + " | Character: '" + temp[i] + "')\n");
@@ -596,6 +614,7 @@ public class BasicByteStream {
                 //  needs this method for the above statement!
                 //  String appendZeroes(int codePoint, int numLength);
                 whiteSpaceFlag = true;
+                break;
             }
         }
 
@@ -656,8 +675,12 @@ public class BasicByteStream {
         int ch = 0;
 
         do {
-            System.out.println("Choose File Path:\n1. Default: " +
-                    new File(DEFAULT_DIRECTORY_FILE_PATH).getAbsolutePath());
+            try {
+                System.out.println("Choose File Path:\n1. Default: " +
+                        new File(DEFAULT_DIRECTORY_FILE_PATH).getCanonicalPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             System.out.println("2. Enter Path Manually. ");
 
             //  ch -> user's input.
@@ -667,7 +690,11 @@ public class BasicByteStream {
 
                 //  Default Path.
                 case 1:
-                    fPath = DEFAULT_DIRECTORY_FILE_PATH;
+                    try {
+                        fPath = new File(DEFAULT_DIRECTORY_FILE_PATH).getCanonicalPath();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     break;
 
                 //  Manually Input Complete Path.
@@ -713,7 +740,23 @@ public class BasicByteStream {
 
             //  Check if the file path is a directory & it already exists.
             if ((new File(str).isDirectory()) && (new File(str).exists())) {
-                fPath = str;
+
+                //  return invalid if file path is just the drive letter with the colon char.
+                if ((str.length() == 2) && (str.charAt(str.length() - 1) == ':')) {
+                    System.out.println("Invalid Path!\nPlease Try Again...");
+                    continue;
+                }
+                //  Convert the relative path into canonical path.
+                try {
+                    //  Parse valid user input into canonical path
+                    fPath = (new File(str)).getCanonicalPath();
+
+                    //  Append additional '\' at last if path doesn't have any.
+                    if (fPath.charAt(fPath.length() - 1) != '\\')
+                        fPath += "\\";
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             } else if (str.equals("2")) {   //  File Path is empty.
                 System.out.println("File Path can't be Empty!");
@@ -742,9 +785,6 @@ public class BasicByteStream {
         //  Check if the file already exists at the path specified.
         boolean fExists = (new File(filePath + fileName + "." + fileExt).exists());
 
-//        if (fExists)
-//            System.out.println("There is already a file with the same name in this location!");
-
         /*
          * Increment the counter of new file name according to the last version of the existing file name.
          * Example: a.txt | a (2).txt | a (3).txt |
@@ -766,7 +806,8 @@ public class BasicByteStream {
             System.out.println("2. Overwrite the file with the new content.");
 
             if (possiblyDuplicate)
-                System.out.println("3. Keep Both Files, Renaming the new file as \"" + localFileName + "." + fileExt + "\"");
+                System.out.println("3. Keep Both Files, Renaming the new file as \"" +
+                        localFileName + "." + fileExt + "\"");
             else
                 System.out.println("3. Keep Both Files, Renaming the new file as \"" + fileName + " (" +
                         rnCount + ")" + "." + fileExt + "\"");
@@ -821,7 +862,7 @@ public class BasicByteStream {
 
         //  initialize localFileName with the given fileName.
         localFileName = fileName;
-//        boolean tmpExists = (new File(filePath + fileName + "." + fileExt).exists());
+
         //  If file doesn't exists then return -1.
         if (!(new File(filePath + fileName + "." + fileExt).exists())) {
             return -1;
@@ -1056,6 +1097,8 @@ public class BasicByteStream {
 
         } while (repeatAgain());    //  exit the loop only when user opts to stop entering the content for file.
 
+        //  Remove the last new line character.
+        fData = fData.substring(0, fData.length() - 1);
         displayFileContentToBeWritten(fData);
 
         return fData;   //  return the local variable which contains the entire content of the file.
@@ -1064,19 +1107,23 @@ public class BasicByteStream {
     //  Display the content to be written in the file.
     private void displayFileContentToBeWritten(String fData) {
 //        Time Stamp: 1st November 2K18, 05:42 PM!
-//Updated Time Stamp: 4th November 2K18, 10:22 PM..!!
+//  Updated Time Stamp: 4th November 2K18, 10:22 PM..!!
 
 
+        //  new line character at the last index has been already removed from the fData,
+        //  hence, content to be written in the file only has an additional new line character
+        //  at the beginning in the case of append mode, other wise no additional new line
+        //  character has been added neither at the beginning nor at the end.
         System.out.println("Content to be written in File:");
         System.out.println("----------------------");
 
-        //  If appending, then skip printing the first & last characters i.e. '\n' on the console.
+        //  If appending, then skip printing the first new line characters i.e. '\n' on the console.
         if (appendFlag)
-            System.out.println(fData.substring(1, fData.length() - 1));
+            System.out.println(fData.substring(1));
 
-            //  Otherwise, skip printing the last character i.e. '\n' on the console.
+            //  Otherwise, print the entire content to be written in the file.
         else
-            System.out.println(fData.substring(0, fData.length() - 1));
+            System.out.println(fData);
         System.out.println("----------------------");
     }
 
@@ -1098,7 +1145,6 @@ public class BasicByteStream {
                     return true;
                 case 'n':
                 case 'N':
-//                System.out.println(fData);
                     return false;
 
                 /*
@@ -1128,7 +1174,7 @@ public class BasicByteStream {
     //  Create New File from all the details extracted, parsed & validated successfully.
     private void createNewFile() throws FileNotFoundException {
 //        Time Stamp: 22nd October 2K18, 4:17 PM!
-//Updated Time Stamp: 28th October 2K18, 08:16 PM!
+//  Updated Time Stamp: 28th October 2K18, 08:16 PM!
 
         //  fPath must always consist of '/' directory delimiter
         //  & character at its last index must be '/'.
@@ -1142,10 +1188,8 @@ public class BasicByteStream {
             e.printStackTrace();
         } finally {
             try {
-                if (fos != null) {
-                    fos.close();
-                    displaySuccessMsg();
-                }
+                fos.close();
+                displaySuccessMsg();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -1158,7 +1202,8 @@ public class BasicByteStream {
     private void displaySuccessMsg() {
         String fileStatus = "";
         fileStatus = appendFlag ? "updated" : "created";
-        System.out.println("File |" + fileName + "." + fileExt + "| successfully " + fileStatus + " in the following directory,");
+        System.out.println("File |" + fileName + "." + fileExt + "| successfully " +
+                fileStatus + " in the following directory,");
 
         //  Display Canonical Path of the directory of the file.
         //  Canonical Path simply replaces "." & ".." symbolic links into respective absolute path.
@@ -1187,36 +1232,36 @@ public class BasicByteStream {
 
         //  If there's already a Error given before, do not print it multiple times.
         //  Simply skip printing "Error:" as its already been done before.
-        if (!isErrorOccured()) {
+        if (!isErrorOccurred()) {
             System.out.println("Error:");
-            setErrorOccured(true);
+            setErrorOccurred(true);
         }
     }
 
-    private String replaceReverseSolidus(String temp) {
-        return temp.replace('\\', '/');
-    }
+//    private String replaceReverseSolidus(String temp) {
+//        return temp.replace('\\', '/');
+//    }
 
     public boolean isWarningRaised() {
         return warningRaised;
     }
 
-    public boolean isErrorOccured() {
-        return errorOccured;
+    public boolean isErrorOccurred() {
+        return errorOccurred;
     }
 
     public void setWarningRaised(boolean warningRaised) {
         this.warningRaised = warningRaised;
     }
 
-    public void setErrorOccured(boolean errorOccured) {
-        this.errorOccured = errorOccured;
+    public void setErrorOccurred(boolean errorOccurred) {
+        this.errorOccurred = errorOccurred;
     }
 }
 
 /*
  * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 5th November 2K18, 08:42 PM!
+ * Date Modified: 8th November 2K18, 12:59 PM!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
