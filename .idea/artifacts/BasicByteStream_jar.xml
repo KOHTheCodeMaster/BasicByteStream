@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BasicByteStream:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BasicByteStream_jar</output-path>
+    <root id="archive" name="BasicByteStream.jar">
+      <element id="module-output" name="FileHandlingBasics" />
+    </root>
+  </artifact>
+</component>
