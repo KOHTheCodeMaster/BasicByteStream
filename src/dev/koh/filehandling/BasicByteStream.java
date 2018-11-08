@@ -1,3 +1,48 @@
+/*
+ *  Time Stamp: 8th November 2K18, 01:48 PM,
+ *  Basic Byte Stream
+ *  Version: 1.0.0
+ *  Status: Active
+ *
+ *  This is simply a basic project dealing with Java File I/O,
+ *  Facilitating to keep new files even if the file already exists with the same name,
+ *  by renaming the new file according to the count value of the pre-existing files in the same dir.
+ *  I tried to fix the middle counter problem (i.e. "fileName... (n)" where n is the middleCounter)
+ *  when the file already exists with the same name, it simply keeps on incrementing the value of n by 1
+ *  until the file with such name doesn't exists, but once it exceeds Max. Integer Range,
+ *  It goes back to negative values, thus providing wrong name to the new file.
+ *  Hence, i have tried to fix such kind of bug found especially in Windows Operating System.
+ *
+ *  Example:
+ *  Follow the following steps & you'll realize the need of the fix i attempted in this project.
+ *  1. Create new file with name "a (2147483648).txt"
+ *  2. Create another file with the same name "a (2147483648).txt"
+ *      It'll prompt you for renaming the already existing file with new name
+ *          "a (-2147483647).txt"
+ *  As soon as the counter value goes beyond the Max. Range of Integer i.e. 2^31, it goes back to the negative.
+ *
+ *  Additionally,
+ *  Many times, It prompts with an Error "Destination path too long" which is unpredictable & senseless.
+ *  Example:
+ *  1. Create new file with name "a (2000000001).txt"
+ *  2. Create another file with the same name "a (2000000001).txt"
+ *      It'll prompt with the Error "Destination path too long".
+ *
+ *  So, i attempted to make a simple yet powerful command line tool to create new files without any clash of
+ *  file names with existing file names, fixing the bug of middle counter & treating it as a string once it
+ *  exceeds the Max. Range of Int. So, creating another file with name "a (2147483648).txt" will treat
+ *  entire numbers between parenthesis as a string & simply prompt user to rename the file
+ *  with name: "a (2147483648) (1).txt" by adding new middle counter to remove the redundancy.
+ *
+ *  Upcoming Updates:
+ *  1. Rename Utility.
+ *  2. Read Content from text files.
+ *  3. Performance & Code Optimization.
+ *
+ *  Code Developed By,
+ *  ~K.O.H..!! ^__^
+ */
+
 package dev.koh.filehandling;
 
 import java.io.*;
@@ -6,8 +51,7 @@ import java.util.Scanner;
 public class BasicByteStream {
 
     private Scanner scanner = new Scanner(System.in);
-    //    private static final String ABSOLUTE_FILE_PATH = "E:\\HEADQUARTERS..!!\\CodeBase\\Java\\CoreJava\\" +
-//            "FileHandling\\src\\dev\\koh\\filehandling\\res\\txtfiles\\";
+
     private static final String DEFAULT_DIRECTORY_FILE_PATH = ".\\";
 
     private String filePath = null;
@@ -291,68 +335,13 @@ public class BasicByteStream {
 
     }
 
-    private void converToLowerCaseChar(boolean invalidFlag) {
-        //  Time Stamp: 4th November 2K18, 10:22 PM..!!
-        if (!invalidFlag)
-            if (hasUpperCase(fileExt)) {
-                //  Display Warning Message.
-                displayWarning();
-                System.out.println("Upper Case Characters found in file extension!");
-                System.out.println("Converting 'em all to lower case!\n");
-
-                //  Update fileExt to all lower case characters.
-                fileExt = fileExt.toLowerCase();
-            }
-    }
-
-    //  Reset Warning & Error Flags to false.
-    private void resetFlags() {
-        //  Time Stamp: 4th November 2K18, 10:22 PM..!!
-        setWarningRaised(false);
-        setErrorOccurred(false);
-    }
-
-    private boolean hasUpperCase(String str) {
-        //  Time Stamp: 1st November 2K18, 06:10 PM..!!
-
-        //  return true if any character of str is Upper Case.
-        for (char c : str.toCharArray()) {
-            if (c >= 'A' && c <= 'Z')
-                return true;
-        }
-        return false;
-    }
-
-    private boolean hasLowerCase(String str) {
-        //  Time Stamp: 1st November 2K18, 06:10 PM..!!
-
-        //  return true if any character of str is Lower Case.
-        for (char c : str.toCharArray()) {
-            if (c >= 'a' && c <= 'z')
-                return true;
-        }
-        return false;
-
-    }
-
-    private boolean hasDigit(String str) {
-        //  Time Stamp: 1st November 2K18, 06:10 PM!
-
-        //  return true if any character of str is a Digit.
-        for (char c : str.toCharArray()) {
-            if (c >= '0' && c <= '9')
-                return true;
-        }
-        return false;
+    private String obtainFileName() {
+        System.out.print("Enter File Name: ");
+        return scanner.nextLine();
     }
 
     private String obtainFileExt() {
         System.out.print("Enter File Extension (Only ALPHA-Numeric Charset. without any period) : ");
-        return scanner.nextLine();
-    }
-
-    private String obtainFileName() {
-        System.out.print("Enter File Name: ");
         return scanner.nextLine();
     }
 
@@ -628,18 +617,19 @@ public class BasicByteStream {
         //  beginning or at the end.
 
         //  Remove if any additional white space present at beginning or at the end.
-        if (hasWhiteSpace(fPart)) {
+        if (Character.isWhitespace(fPart.charAt(0)) || hasWhiteSpace(fPart) ||
+                Character.isWhitespace(fPart.charAt(fPart.length() - 1))) {
             displayWarning();
             System.out.print("Removing Additional Spaces found at: ");
 
-            //  Update fileName or fileExtension accordingly. (trimming all unnecessary white spaces)
-            if (printTag.equals("File Name"))
-                fileName = fileName.trim();
-            else
-                fileExt = fileExt.trim();
+            //  Display additional white space character occurrence.
+            displayAdditionalWhiteSpaceFoundAt(fPart);
         }
-        //  Display additional white space character occurrence.
-        displayAdditionalWhiteSpaceFoundAt(fPart);
+        //  Update fileName or fileExtension accordingly. (trimming all unnecessary white spaces)
+        if (printTag.equals("File Name"))
+            fileName = fileName.trim();
+        else
+            fileExt = fileExt.trim();
     }
 
     /*
@@ -649,11 +639,13 @@ public class BasicByteStream {
      */
     private void displayAdditionalWhiteSpaceFoundAt(String fPart) {
 
-        if ((fPart.charAt(0) == ' ') && !(fPart.charAt(fPart.length() - 1) == ' ')) {
+        if (Character.isWhitespace(fPart.charAt(0)) && !Character.isWhitespace(fPart.charAt(fPart.length() - 1))) {
             System.out.println("Beginning!\n");
-        } else if (!(fPart.charAt(0) == ' ') && (fPart.charAt(fPart.length() - 1) == ' ')) {
+        } else if (!Character.isWhitespace(fPart.charAt(0)) &&
+                Character.isWhitespace(fPart.charAt(fPart.length() - 1))) {
             System.out.println("End!\n");
-        } else if ((fPart.charAt(0) == ' ') && (fPart.charAt(fPart.length() - 1) == ' ')) {
+        } else if (Character.isWhitespace(fPart.charAt(0)) &&
+                Character.isWhitespace(fPart.charAt(fPart.length() - 1))) {
             System.out.println("Beginning & End!\n");
         }
     }
@@ -662,112 +654,6 @@ public class BasicByteStream {
     private boolean hasWhiteSpace(String str) {
         //  Time Stamp: 4th November 2K18, 06:23 PM!
         return (str.charAt(0) == ' ' || str.charAt(str.length() - 1) == ' ');
-    }
-
-    /*
-     *  Time Stamp: 5th November 2K18, 01:28 PM..!!
-     *  Obtain File Path from User,
-     *  either Default Directory or Explicitly Absolute Path Input by User.
-     */
-    private String obtainFilePath() {
-
-        String fPath = null;
-        int ch = 0;
-
-        do {
-            try {
-                System.out.println("Choose File Path:\n1. Default: " +
-                        new File(DEFAULT_DIRECTORY_FILE_PATH).getCanonicalPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            System.out.println("2. Enter Path Manually. ");
-
-            //  ch -> user's input.
-            ch = userInputInt();
-
-            switch (ch) {
-
-                //  Default Path.
-                case 1:
-                    try {
-                        fPath = new File(DEFAULT_DIRECTORY_FILE_PATH).getCanonicalPath();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-
-                //  Manually Input Complete Path.
-                case 2:
-                    //  Prompt user for file path & validate it.
-                    fPath = chooseFilePath();
-                    break;
-
-                default:
-                    displayError();
-                    if (ch == -2)      //  In case of only Empty input by user.
-                        System.out.println("Choice can't be Empty!");
-                    else if (ch == -3)  //  In case of only white space characters input by user.
-                        System.out.println("Choice can't be Blank!");
-                    else if (ch == -4)     //  In case of More than 1 character input by user.
-                        System.out.println("Choice must be a Single Character!");
-                    else if (ch == -5)     //  In case of wrong/invalid input characters.
-                        System.out.println("Choice must be a Single Numeric Digit Only!");
-                        //  In case of user input is logically wrong but a single digit character
-                        //  excluding white space. (" 7 ").
-                    else
-                        System.out.println("Select the Choice between: 0 and 1 only!");
-                    System.out.println("Please enter a valid choice!\n");
-            }
-
-        } while (ch != 1 && ch != 2);   //  Prompt user for input until user opts for a valid choice i.e. 1 or 2.
-        return fPath;   //  return the selected new file path.
-    }
-
-    /*
-     *  Time Stamp: 5th November 2K18, 08:23 PM..!!
-     *  Prompt User to input file path either absolute or relative,
-     *  validate the file path & return it as a string.
-     */
-    private String chooseFilePath() {
-
-        String fPath = "";
-
-        //  Keep Prompting user to input file path until its a valid one.
-        while (true) {
-            System.out.println("Enter Directory Path: ");
-            String str = userInputString();
-
-            //  Check if the file path is a directory & it already exists.
-            if ((new File(str).isDirectory()) && (new File(str).exists())) {
-
-                //  return invalid if file path is just the drive letter with the colon char.
-                if ((str.length() == 2) && (str.charAt(str.length() - 1) == ':')) {
-                    System.out.println("Invalid Path!\nPlease Try Again...");
-                    continue;
-                }
-                //  Convert the relative path into canonical path.
-                try {
-                    //  Parse valid user input into canonical path
-                    fPath = (new File(str)).getCanonicalPath();
-
-                    //  Append additional '\' at last if path doesn't have any.
-                    if (fPath.charAt(fPath.length() - 1) != '\\')
-                        fPath += "\\";
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                break;
-            } else if (str.equals("2")) {   //  File Path is empty.
-                System.out.println("File Path can't be Empty!");
-            } else if (str.equals("3")) {   //  File Path is blank.
-                System.out.println("File Path can't be Blank!");
-            } else if (str.equals("4")) {   //  File Path begins with a digit.
-                System.out.println("File Path can't begin with a Digit!");
-            } else      //  //  File Path is invalid.
-                System.out.println("Invalid Path!\nPlease Try Again...");
-        }
-        return fPath;
     }
 
     /*
@@ -1045,34 +931,113 @@ public class BasicByteStream {
         return middleCounter;
     }
 
-    //  Extract int value from the character digit.
-    private int gatherCharValue(char c) {
-        switch (c) {
-            case '\u0030':
-                return 0;
-            case '\u0031':
-                return 1;
-            case '\u0032':
-                return 2;
-            case '\u0033':
-                return 3;
-            case '\u0034':
-                return 4;
-            case '\u0035':
-                return 5;
-            case '\u0036':
-                return 6;
-            case '\u0037':
-                return 7;
-            case '\u0038':
-                return 8;
-            case '\u0039':
-                return 9;
-            default:
-                displayError();
-                System.out.println("Char Value Error!");
-                return -1;
+    /*
+     *  Time Stamp: 5th November 2K18, 01:28 PM..!!
+     *  Obtain File Path from User,
+     *  either Default Directory or Explicitly Absolute Path Input by User.
+     */
+    private String obtainFilePath() {
+
+        String fPath = null;
+        int ch = 0;
+
+        do {
+            try {
+                System.out.println("Choose File Path:\n1. Default: " +
+                        new File(DEFAULT_DIRECTORY_FILE_PATH).getCanonicalPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("2. Enter Path Manually. ");
+
+            //  ch -> user's input.
+            ch = userInputInt();
+
+            switch (ch) {
+
+                //  Default Path.
+                case 1:
+                    try {
+                        fPath = new File(DEFAULT_DIRECTORY_FILE_PATH).getCanonicalPath();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        //  Append additional '\' at last if path doesn't have any.
+                        if (fPath.charAt(fPath.length() - 1) != '\\')
+                            fPath += "\\";
+                    }
+                    break;
+
+                //  Manually Input Complete Path.
+                case 2:
+                    //  Prompt user for file path & validate it.
+                    fPath = chooseFilePath();
+                    break;
+
+                default:
+                    displayError();
+                    if (ch == -2)      //  In case of only Empty input by user.
+                        System.out.println("Choice can't be Empty!");
+                    else if (ch == -3)  //  In case of only white space characters input by user.
+                        System.out.println("Choice can't be Blank!");
+                    else if (ch == -4)     //  In case of More than 1 character input by user.
+                        System.out.println("Choice must be a Single Character!");
+                    else if (ch == -5)     //  In case of wrong/invalid input characters.
+                        System.out.println("Choice must be a Single Numeric Digit Only!");
+                        //  In case of user input is logically wrong but a single digit character
+                        //  excluding white space. (" 7 ").
+                    else
+                        System.out.println("Select the Choice between: 0 and 1 only!");
+                    System.out.println("Please enter a valid choice!\n");
+            }
+
+        } while (ch != 1 && ch != 2);   //  Prompt user for input until user opts for a valid choice i.e. 1 or 2.
+        return fPath;   //  return the selected new file path.
+    }
+
+    /*
+     *  Time Stamp: 5th November 2K18, 08:23 PM..!!
+     *  Prompt User to input file path either absolute or relative,
+     *  validate the file path & return it as a string.
+     */
+    private String chooseFilePath() {
+
+        String fPath = "";
+
+        //  Keep Prompting user to input file path until its a valid one.
+        while (true) {
+            System.out.println("Enter Directory Path: ");
+            String str = userInputString();
+
+            //  Check if the file path is a directory & it already exists.
+            if ((new File(str).isDirectory()) && (new File(str).exists())) {
+
+                //  return invalid if file path is just the drive letter with the colon char.
+                if ((str.length() == 2) && (str.charAt(str.length() - 1) == ':')) {
+                    System.out.println("Invalid Path!\nPlease Try Again...");
+                    continue;
+                }
+                //  Convert the relative path into canonical path.
+                try {
+                    //  Parse valid user input into canonical path
+                    fPath = (new File(str)).getCanonicalPath();
+                    //  Append additional '\' at last if path doesn't have any.
+                    if (fPath.charAt(fPath.length() - 1) != '\\')
+                        fPath += "\\";
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            } else if (str.equals("2")) {   //  File Path is empty.
+                System.out.println("File Path can't be Empty!");
+            } else if (str.equals("3")) {   //  File Path is blank.
+                System.out.println("File Path can't be Blank!");
+            } else if (str.equals("4")) {   //  File Path begins with a digit.
+                System.out.println("File Path can't begin with a Digit!");
+            } else      //  //  File Path is invalid.
+                System.out.println("Invalid Path!\nPlease Try Again...");
         }
+        return fPath;
     }
 
     //  Prompt User for Content to be written in file.
@@ -1104,16 +1069,104 @@ public class BasicByteStream {
         return fData;   //  return the local variable which contains the entire content of the file.
     }
 
+
+    private void converToLowerCaseChar(boolean invalidFlag) {
+        //  Time Stamp: 4th November 2K18, 10:22 PM..!!
+        if (!invalidFlag)
+            if (hasUpperCase(fileExt)) {
+                //  Display Warning Message.
+                displayWarning();
+                System.out.println("Upper Case Characters found in file extension!");
+                System.out.println("Converting 'em all to lower case!\n");
+
+                //  Update fileExt to all lower case characters.
+                fileExt = fileExt.toLowerCase();
+            }
+    }
+
+    //  Reset Warning & Error Flags to false.
+    private void resetFlags() {
+        //  Time Stamp: 4th November 2K18, 10:22 PM..!!
+        setWarningRaised(false);
+        setErrorOccurred(false);
+    }
+
+    private boolean hasUpperCase(String str) {
+        //  Time Stamp: 1st November 2K18, 06:10 PM..!!
+
+        //  return true if any character of str is Upper Case.
+        for (char c : str.toCharArray()) {
+            if (c >= 'A' && c <= 'Z')
+                return true;
+        }
+        return false;
+    }
+
+    private boolean hasLowerCase(String str) {
+        //  Time Stamp: 1st November 2K18, 06:10 PM..!!
+
+        //  return true if any character of str is Lower Case.
+        for (char c : str.toCharArray()) {
+            if (c >= 'a' && c <= 'z')
+                return true;
+        }
+        return false;
+
+    }
+
+    private boolean hasDigit(String str) {
+        //  Time Stamp: 1st November 2K18, 06:10 PM!
+
+        //  return true if any character of str is a Digit.
+        for (char c : str.toCharArray()) {
+            if (c >= '0' && c <= '9')
+                return true;
+        }
+        return false;
+    }
+
+    //  Extract int value from the character digit.
+    private int gatherCharValue(char c) {
+        switch (c) {
+            case '\u0030':
+                return 0;
+            case '\u0031':
+                return 1;
+            case '\u0032':
+                return 2;
+            case '\u0033':
+                return 3;
+            case '\u0034':
+                return 4;
+            case '\u0035':
+                return 5;
+            case '\u0036':
+                return 6;
+            case '\u0037':
+                return 7;
+            case '\u0038':
+                return 8;
+            case '\u0039':
+                return 9;
+            default:
+                displayError();
+                System.out.println("Char Value Error!");
+                return -1;
+        }
+    }
+
+
     //  Display the content to be written in the file.
     private void displayFileContentToBeWritten(String fData) {
 //        Time Stamp: 1st November 2K18, 05:42 PM!
 //  Updated Time Stamp: 4th November 2K18, 10:22 PM..!!
 
-
-        //  new line character at the last index has been already removed from the fData,
-        //  hence, content to be written in the file only has an additional new line character
-        //  at the beginning in the case of append mode, other wise no additional new line
-        //  character has been added neither at the beginning nor at the end.
+        /*
+         *  new line character at the last index has been already removed from the fData,
+         *  hence, content to be written in the file only has an additional new line character
+         *  at the beginning in the case of append mode, other wise no additional new line
+         *  character has been added neither at the beginning nor at the end.
+         */
         System.out.println("Content to be written in File:");
         System.out.println("----------------------");
 
@@ -1260,34 +1313,9 @@ public class BasicByteStream {
 }
 
 /*
- * Date Created: 22nd October 2K18, 03:52 PM!
- * Date Modified: 8th November 2K18, 12:59 PM!
+ * Date Created: 22nd October 2K18, 03:52 PM..!!
+ * Date Modified: 8th November 2K18, 02:17 PM..!!
  *
  * Code Developed By,
  * K.O.H..!! ^__^
  */
-
-
-//  warning count   | Pending!
-//  check file exists again before writing. Pending.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
